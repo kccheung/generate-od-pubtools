@@ -12,11 +12,14 @@ The following code can be used to automatically obtain **Population Count** (fro
 
 ### Code Description
 
-- generator.py - Main generator class that serves as the primary entry point. Takes regional boundaries as input and orchestrates the entire OD matrix generation pipeline by integrating satellite imagery, population data, and diffusion models
-- model.py - Core graph generative model implementations including diffusion related data and noise scheduler, denoising network of graph transformers, etc
-- sateimgs.py - Satellite image processing module that handles downloading, tiling, concatenation, and feature extraction based on [RemoteCLIP](https://arxiv.org/abs/2306.11029)
-- utils.py - Utility functions for distance calculations, coordinate transformations, UTM projections, and visualization of generated OD flows
-- worldpop.py - Population data acquisition module that fetches regional population statistics from WorldPop ArcGIS services
+```
+generate_od/
+├── generator.py    # Main generator class that serves as the primary entry point. Takes regional boundaries as input and orchestrates the entire OD matrix generation pipeline by integrating satellite imagery, population data, and diffusion models
+├── model.py        # Core graph generative model implementations including diffusion related data and noise scheduler, denoising network of graph transformers, etc
+├── sateimgs.py     # Satellite image processing module that handles downloading, tiling, concatenation, and feature extraction based on [RemoteCLIP](https://arxiv.org/abs/2306.11029)
+├── utils.py        # Utility functions for distance calculations, coordinate transformations, UTM projections, and visualization of generated OD flows
+└── worldpop.py     # Population data acquisition module that fetches regional population statistics from WorldPop ArcGIS services
+```
 
 ### Use case
 
