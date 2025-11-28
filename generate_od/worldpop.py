@@ -23,8 +23,20 @@ def population_one_region(args):
 
     # get the worldpop tiff for the region
     base_url = 'https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Total_Population_100m/ImageServer/exportImage?f=image&format=tiff&noData=0&'
+    # Use native service CRS (EPSG:4326) at its default ~100m resolution.
+    # This avoids automatic downsampling triggered by the 4100-pixel size limit
+    # when requesting very tall regions in Web Mercator.
     left, bottom, right, top = region.geometry.bounds
-    url = base_url + f"bbox={left},{bottom},{right},{top}"
+
+    # Explicitly request the 2020 layer using the StdTime value
+    # (1577836800000 = 2020-01-01T00:00:00Z).
+    url = (
+            base_url
+            + f"bbox={left},{bottom},{right},{top}"
+            + "&bboxSR=4326&imageSR=4326"
+            + "&time=1577836800000"
+    )
+    print(f"\nworldpop_url:\n{url}")  # debug use
 
     max_times = 10
     flag = False
@@ -44,7 +56,7 @@ def population_one_region(args):
             continue
 
     if flag == False:
-        raise("Network error for accessing https://worldpop.arcgis.com/.")
+        raise ("Network error for accessing https://worldpop.arcgis.com/.")
 
     img_bytes = BytesIO(response.content)
     with MemoryFile(img_bytes) as memfile:
@@ -56,7 +68,7 @@ def population_one_region(args):
                 population = float(out_img[out_img > 0].sum())
             except:
                 population = 0
-            
+
             if not isinstance(population, (int, float)):
                 raise ValueError(f"Population of {region} is invalid: {population}")
 
@@ -67,7 +79,6 @@ def population_one_region(args):
             area = geo_series.to_crs(f"EPSG:{epsg}").area.item() / 1e6
 
     return population, area
-
 
 
 def worldpop(area_shp, token=None, num_proc=10):
@@ -96,7 +107,7 @@ def worldpop(area_shp, token=None, num_proc=10):
         population, areasize = population_one_region(region)
         populations.append(population)
         areasizes.append(areasize)
-    
+
     # save the population and areasize of the area
     feat = np.array([populations, areasizes]).T
 
