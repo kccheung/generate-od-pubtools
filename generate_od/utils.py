@@ -14,14 +14,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-
 class Log_transformer():
     def __init__(self):
         pass
 
     def fit_transform(self, x):
         return np.log1p(x)
-    
+
     def inverse_transform(self, x):
         return np.expm1(x)
 
@@ -43,9 +42,9 @@ def recover_od_shapes(batchlization):
 
 def reshape_matrix(matrix, k=100):
     n = matrix.shape[0]
-    
+
     if k > n:
-        padding = np.zeros((n, k-n))
+        padding = np.zeros((n, k - n))
         return np.hstack([matrix, padding])
     if k < n:
         return matrix[:, :k]
@@ -70,7 +69,7 @@ def get_one_point(shp):
         first_point = first_polygon.exterior.coords[0]
     else:
         raise ValueError('Geometry type not supported')
-    
+
     pointx, pointy = first_point[0], first_point[1]
 
     return pointx, pointy
@@ -110,7 +109,7 @@ def calculate_utm_epsg(longitude, latitude):
     """
     # Determine the UTM zone from the longitude
     utm_zone = int((longitude + 180) / 6) + 1
-    
+
     # Determine the hemisphere and construct the EPSG code
     if latitude >= 0:
         # Northern Hemisphere
@@ -118,7 +117,7 @@ def calculate_utm_epsg(longitude, latitude):
     else:
         # Southern Hemisphere
         epsg_code = 32700 + utm_zone
-    
+
     return epsg_code
 
 
@@ -152,7 +151,7 @@ def deg2XY(lon_deg, lat_deg, zoom=15):
     '''
     # convert the latitude to radians
     lat_rad = np.radians(lat_deg)
-    
+
     # the total number of the tiles in the x and y direction
     n = 2.0 ** zoom
 
@@ -160,7 +159,7 @@ def deg2XY(lon_deg, lat_deg, zoom=15):
     xtile = int((lon_deg + 180.0) / 360.0 * n)
     # the y index of the tile
     ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
-    
+
     return xtile, ytile
 
 
@@ -208,7 +207,7 @@ def create_tile_polygons(lon_arr, lat_arr, x_arr, y_arr):
     # create the lon and lat meshgrid
     lon_mesh, lat_mesh = np.meshgrid(lon_arr, lat_arr, indexing='ij')
     x_mesh, y_mesh = np.meshgrid(x_arr, y_arr, indexing='ij')
-    
+
     # create the polygons
     vertices = np.array([
         lon_mesh[:-1, :-1], lat_mesh[:-1, :-1],
@@ -229,11 +228,11 @@ def create_tile_polygons(lon_arr, lat_arr, x_arr, y_arr):
     ])
     vertices_x_y = vertices_x_y.reshape(4, 2, -1)
     vertices_x_y = np.transpose(vertices_x_y, axes=(2, 0, 1))
-    y_x = [f"{int(p[0][1])}_{int(p[0][0])}" for p in vertices_x_y]                      
-    
+    y_x = [f"{int(p[0][1])}_{int(p[0][0])}" for p in vertices_x_y]
+
     # create the GeoDataFrame
-    tile_gpd= gpd.GeoDataFrame({"Y_X" : y_x}, geometry=polygons, crs="EPSG:4326")
-    
+    tile_gpd = gpd.GeoDataFrame({"Y_X": y_x}, geometry=polygons, crs="EPSG:4326")
+
     return tile_gpd
 
 
@@ -256,7 +255,7 @@ def geometry_to_listXY(geometry):
     tile_gpd = create_tile_polygons(lon_arr, lat_arr, x_arr, y_arr)
 
     # get the tiles that intersect with the geometries
-    intersection = gpd.sjoin(tile_gpd, gpd.GeoDataFrame(data={"tmp":[0]}, geometry=[geometry], crs="EPSG:4326").drop(columns=["tmp"]), predicate='intersects', how='inner')
+    intersection = gpd.sjoin(tile_gpd, gpd.GeoDataFrame(data={"tmp": [0]}, geometry=[geometry], crs="EPSG:4326").drop(columns=["tmp"]), predicate='intersects', how='inner')
     Y_X = list(intersection.Y_X)
 
     # if there is only one tile, then return all the tiles
@@ -278,7 +277,7 @@ def get_YX_area(area_shp):
     # get the coordinates of the tiles
     geometries = area_shp["geometry"]
     area_shp["Y_X"] = geometries.map(geometry_to_listXY)
-    
+
     # remove the duplicate tiles
     Y_X = sum(list(area_shp["Y_X"]), [])
     Y_X = sorted(list(set(Y_X)))
@@ -286,36 +285,45 @@ def get_YX_area(area_shp):
     return area_shp, Y_X
 
 
-def plot_od_arc_chart(od, geometries, low, high):
+def plot_od_arc_chart(od, geometries, low=0.8, high=0.99):
+    """
+    low / high are percentiles between 0 and 1, not raw flow counts.
+
+    A safe, reasonable choice:
+	• low = 0.8 (only show top 20% of flows)
+	• high = 0.99 (clip the very largest flows so colour scale isn’t dominated)
+
+	Plot the arc chart for the given OD matrix on map.
+    """
 
     font = {'size': 12}
     matplotlib.rc('font', **font)
-    
+
     OD = od
     point = geometries.centroid
     line = []
     for i in range(OD.shape[0]):
         for j in range(OD.shape[1]):
             if i != j and OD[i][j] > 0:
-                line.append( [point[i], point[j], OD[i][j]] )
-    points_df = gpd.GeoDataFrame(line, columns = ['geometry_o', 'geometry_d', 'flow'])
+                line.append([point[i], point[j], OD[i][j]])
+    points_df = gpd.GeoDataFrame(line, columns=['geometry_o', 'geometry_d', 'flow'])
     points_df['line'] = points_df.apply(lambda x: LineString([x['geometry_o'], x['geometry_d']]), axis=1)
 
-    f, ax = plt.subplots(1,figsize=(6,8),dpi=200)
+    f, ax = plt.subplots(1, figsize=(6, 8), dpi=200)
 
-    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow']<=low], geometry=points_df['line'])
+    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] <= low], geometry=points_df['line'])
     target_gdf.crs = "EPSG:4326"
-    target_gdf.plot(ax = ax, column = 'flow',linewidth=0.05,color='#0308F8',alpha = 0.4)
+    target_gdf.plot(ax=ax, column='flow', linewidth=0.05, color='#0308F8', alpha=0.4)
 
-    target_gdf = gpd.GeoDataFrame(points_df[(points_df['flow']>low) & (points_df['flow']<=high)], geometry=points_df['line'])
-    target_gdf.plot(ax=ax, column = 'flow',linewidth=0.1,color='#FD0B1B',alpha = 0.6)
+    target_gdf = gpd.GeoDataFrame(points_df[(points_df['flow'] > low) & (points_df['flow'] <= high)], geometry=points_df['line'])
+    target_gdf.plot(ax=ax, column='flow', linewidth=0.1, color='#FD0B1B', alpha=0.6)
 
-    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow']>high], geometry=points_df['line'])
+    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] > high], geometry=points_df['line'])
     target_gdf.crs = "EPSG:4326"
-    target_gdf.plot(ax=ax, column = 'flow', linewidth=0.15, color='yellow',alpha=0.8)
+    target_gdf.plot(ax=ax, column='flow', linewidth=0.15, color='yellow', alpha=0.8)
 
     low, high = int(low), int(high)
-    cx.add_basemap(ax, crs=target_gdf.crs,source=cx.providers.CartoDB.Positron)
+    cx.add_basemap(ax, crs=target_gdf.crs, source=cx.providers.CartoDB.Positron)
     plt.text(0.05, 0.95, f"0~{low}~{high}~∞", transform=ax.transAxes, fontsize=12, va='top', ha='left')
 
     plt.xticks([])

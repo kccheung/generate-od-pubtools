@@ -19,10 +19,6 @@ from scipy.ndimage import binary_fill_holes
 from .utils import *
 
 
-
-
-
-
 def download_one_tile(args):
     '''
     Download the tile for the given x and y coordinates.
@@ -54,7 +50,7 @@ def download_one_tile(args):
             return filename, img_bytes
     except:
         return filename
-    
+
 
 def download_all_tiles(Y_X, token, num_proc=50):
     '''
@@ -92,7 +88,7 @@ def download_all_tiles(Y_X, token, num_proc=50):
             cached_tiles[tile_no] = img
         elif isinstance(result, str):
             fail_tile_list.append(result)
-    
+
     return cached_tiles, fail_tile_list
 
 
@@ -102,7 +98,7 @@ def concat_img_one_region(args):
     '''
     # args
     region, tiles, files = args
-    
+
     # the region should not be too large
     if len(tiles) < 20000:
         # get the x and y coordinates of the tiles
@@ -116,23 +112,23 @@ def concat_img_one_region(args):
         mask_height = row_max - row_min + 1
 
         mask_whole = np.zeros([mask_height * 256, mask_width * 256, 3], dtype=np.int32)
-        
+
         # the pixel coordinates
         pixel_coords = []
         for tile in tiles:
             try:
                 # read the tile
                 img_temp = Image.open(files[tile])
-                
+
                 # get the tile's x and y coordinates
                 row, col = [int(x) for x in tile.split("_")]
 
                 # convert the tile's x and y coordinates to the longitude and latitude
                 minlat, minlon = XY2deg(col, row, 15)
-                maxlat, maxlon = XY2deg(col+1, row+1, 15)
-                
+                maxlat, maxlon = XY2deg(col + 1, row + 1, 15)
+
                 if region.iloc[0].geometry.geom_type != 'MultiPolygon':
-                # if the region is not a multi-polygon
+                    # if the region is not a multi-polygon
                     for coord in region.iloc[0].geometry.exterior.coords:
                         # convert the longitude and latitude to the pixel coordinates, offset
                         x = (coord[0] - minlon) * (256 / (maxlon - minlon))
@@ -152,7 +148,7 @@ def concat_img_one_region(args):
                         # store the pixel coordinates
                         pixel_coords.append((temp_x, temp_y))
                 else:
-                # if the region is a multi-polygon
+                    # if the region is a multi-polygon
                     for polygon in region.iloc[0].geometry.geoms:
                         for coord in polygon.exterior.coords:
                             # convert the longitude and latitude to the pixel coordinates, offset
@@ -173,16 +169,16 @@ def concat_img_one_region(args):
 
                             # store the pixel coordinates
                             pixel_coords.append((temp_x, temp_y))
-            
+
                 mask_whole[(row - row_min) * 256: (row - row_min + 1) * 256, (col - col_min) * 256: (col - col_min + 1) * 256, :] = img_temp
             except:
                 continue
-            
+
         # fill the holes in the mask
         if mask_whole.sum() != 0:
             # convert the mask to the image
             im = np.uint8(mask_whole)
-            im_zero = Image.new('L', (mask_width*256, mask_height*256), 0)
+            im_zero = Image.new('L', (mask_width * 256, mask_height * 256), 0)
             draw = ImageDraw.Draw(im_zero)
             for i in range(len(pixel_coords)):
                 draw.line([pixel_coords[i], pixel_coords[(i + 1) % len(pixel_coords)]], fill="red", width=5)
@@ -196,12 +192,12 @@ def concat_img_one_region(args):
             img_memory.seek(0)
 
             regional_img = img_memory
-            
+
             return int(region.index[0]), regional_img
         else:
             return int(region.index[0])
-        
-        
+
+
     else:
         return int(region.index[0])
 
@@ -220,7 +216,7 @@ def concatentate_tiles(region_list, area_shp, cached_tiles, num_proc=10):
     # concatenate the tiles
     regional_imgs = {}
     fail_region_list = []
-        
+
     # sequential version
     for arg in tqdm(args, desc=" **Concating regional imgs..."):
         result = concat_img_one_region(arg)
@@ -255,13 +251,13 @@ def area_SateImgs(area_shp, token='', num_proc=50):
     # check the token
     if token == '':
         raise Exception("Please provide the token via \{set_satetoken\} for downloading the satellite images.")
-    
+
     # coordinate system
     area_shp = area_shp.to_crs(epsg=4326)
 
     # get the x and y coordinates of the tiles
     area_shp, Y_X = get_YX_area(area_shp)
-    
+
     # download the tiles
     cached_tiles = {}
     remaining = Y_X
@@ -307,14 +303,14 @@ def check_download_RemoteCLIP(model_name):
             url = f"https://huggingface.co/chendelong/RemoteCLIP/resolve/main/RemoteCLIP-{model_name}.pt"
             request.urlretrieve(url, model_path, schedule)
             print(f' **{model_name} is downloaded to {path_to_your_checkpoints} via https.')
-        
+
         if os.path.exists(model_path):
             return "success"
         else:
             return "failed"
-        
 
-def extract_imgfeats_RemoteCLIP(vision_model, model_name, regional_imgs, device): # @param ['RN50', 'ViT-B-32', 'ViT-L-14']
+
+def extract_imgfeats_RemoteCLIP(vision_model, model_name, regional_imgs, device):  # @param ['RN50', 'ViT-B-32', 'ViT-L-14']
     '''
     model: 'RN50', 'ViT-B-32', 'ViT-L-14' from RemoteCLIP
     '''
@@ -324,7 +320,7 @@ def extract_imgfeats_RemoteCLIP(vision_model, model_name, regional_imgs, device)
     # tensor accept by RemoteCLIP
     def load_and_preprocess_image(image):
         image = Image.open(image)
-        image_tensor = preprocess(image).unsqueeze(0) # for batch input
+        image_tensor = preprocess(image).unsqueeze(0)  # for batch input
         return image_tensor
 
     # extract features
