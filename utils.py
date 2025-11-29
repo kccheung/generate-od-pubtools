@@ -5,6 +5,15 @@ from PIL import Image
 from io import BytesIO
 
 
+def od_sanity_print(od_hat):
+    print("OD matrix shape:", od_hat.shape)
+    print("OD matrix (top-left 5x5):")
+    print(od_hat[:5, :5])
+    print("Min / max OD:", od_hat.min(), od_hat.max())
+    print("Total flows:", od_hat.sum())
+    print("Zero diagonal? ", (od_hat.diagonal() == 0).all())
+
+
 def show_regional_image(regional_images, idx, high_res=False):
     """
     regional_images: dict[int, BytesIO or PIL.Image or np.ndarray]

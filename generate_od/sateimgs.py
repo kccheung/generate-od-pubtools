@@ -2,6 +2,8 @@ import os
 import time
 import shutil
 import requests
+import pickle
+import hashlib
 
 from tqdm import tqdm
 from io import BytesIO
@@ -58,7 +60,7 @@ def download_all_tiles(Y_X, token, num_proc=50):
     From Esri living atlas, the token is required to download the tiles.
 
     The tiles are downloaded into the given directory.
-    
+
     return: failed tiles.
     '''
 
@@ -240,7 +242,7 @@ def concatentate_tiles(region_list, area_shp, cached_tiles, num_proc=10):
     return regional_imgs, fail_region_list
 
 
-def area_SateImgs(area_shp, token='', num_proc=50):
+def area_SateImgs(area_shp, token='', num_proc=50, cache_path=None):
     '''
     Download the satellite images for the given area.
     From Esri living atlas, the token is required to download the tiles.
@@ -248,6 +250,29 @@ def area_SateImgs(area_shp, token='', num_proc=50):
     The tiles are downloaded into the given directory.
     And the regional satellite images are obtained by combining the tiles.
     '''
+    # if no cache_path provided, derive a deterministic one from the area geometry
+    if cache_path is None:
+        try:
+            # use a stable representation in EPSG:4326 for hashing
+            gdf_4326 = area_shp.to_crs(epsg=4326)
+        except Exception:
+            gdf_4326 = area_shp
+        wkt_concat = ";".join(gdf_4326.geometry.to_wkt())
+        area_hash = hashlib.md5(wkt_concat.encode("utf-8")).hexdigest()[:12]
+        cache_dir = "cache_sateimgs"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"sateimgs_{area_hash}.pkl")
+
+    # optional cache loading
+    if cache_path is not None and os.path.exists(cache_path):
+        try:
+            with open(cache_path, "rb") as f:
+                regional_imgs = pickle.load(f)
+            print(f" **Loaded regional satellite images from cache: {cache_path}")
+            return regional_imgs
+        except Exception as e:
+            print(f" **Failed to load satellite image cache from {cache_path}: {e}. Recomputing...")
+
     # check the token
     if token == '':
         raise Exception("Please provide the token via \{set_satetoken\} for downloading the satellite images.")
@@ -274,6 +299,16 @@ def area_SateImgs(area_shp, token='', num_proc=50):
         regional_imgs_tmp, fail_region_list = concatentate_tiles(remaining, area_shp, cached_tiles, num_proc)
         regional_imgs.update(regional_imgs_tmp)
         remaining = fail_region_list
+
+    # optional cache saving
+    if cache_path is not None:
+        try:
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            with open(cache_path, "wb") as f:
+                pickle.dump(regional_imgs, f)
+            print(f" **Saved regional satellite images to cache: {cache_path}")
+        except Exception as e:
+            print(f" **Failed to save satellite image cache to {cache_path}: {e}")
 
     return regional_imgs
 

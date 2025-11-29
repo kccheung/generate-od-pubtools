@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import numpy as np
 import geopandas as gpd
@@ -285,15 +286,18 @@ def get_YX_area(area_shp):
     return area_shp, Y_X
 
 
-def plot_od_arc_chart(od, geometries, low=0.8, high=0.99):
+def plot_od_arc_chart(od, geometries,
+                      low=0.1,  # different for every region!
+                      high=0.95,  # different for every region!
+                      add_basemap=False):
     """
     low / high are percentiles between 0 and 1, not raw flow counts.
 
     A safe, reasonable choice:
-	• low = 0.8 (only show top 20% of flows)
-	• high = 0.99 (clip the very largest flows so colour scale isn’t dominated)
+    • low = 0.8 (only show top 20% of flows)
+    • high = 0.99 (clip the very largest flows so colour scale isn’t dominated)
 
-	Plot the arc chart for the given OD matrix on map.
+    Plot the arc chart for the given OD matrix on map.
     """
 
     font = {'size': 12}
@@ -312,18 +316,47 @@ def plot_od_arc_chart(od, geometries, low=0.8, high=0.99):
     f, ax = plt.subplots(1, figsize=(6, 8), dpi=200)
 
     target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] <= low], geometry=points_df['line'])
-    target_gdf.crs = "EPSG:4326"
-    target_gdf.plot(ax=ax, column='flow', linewidth=0.05, color='#0308F8', alpha=0.4)
 
+    # --- DEBUG / SANITY INFO ---
+    print(f"target_gdf total rows: {len(target_gdf)}")
+    print("  non-null geometries:", target_gdf.geometry.notna().sum())
+    print("  non-empty geometries:", (~target_gdf.geometry.is_empty).sum())
+
+    # Check bounds to make sure they are finite
+    bounds = target_gdf.total_bounds  # (minx, miny, maxx, maxy)
+    print("  total_bounds:", bounds)
+
+    if not np.all(np.isfinite(bounds)):
+        warnings.warn(
+            f"Geometry bounds are not finite: {bounds}. "
+            "Cannot safely set aspect; skipping plot."
+        )
+        return None
+
+    print(f"Selected {len(target_gdf)} OD arcs for plotting (low={low}, high={high})")
+    target_gdf.crs = "EPSG:4326"
+    target_gdf.plot(ax=ax,
+                    # column="flow",
+                    linewidth=0.05, alpha=0.4, color='#0308F8',
+        aspect=1  # <- THIS BYPASSES the auto aspect that was failing
+    )
     target_gdf = gpd.GeoDataFrame(points_df[(points_df['flow'] > low) & (points_df['flow'] <= high)], geometry=points_df['line'])
-    target_gdf.plot(ax=ax, column='flow', linewidth=0.1, color='#FD0B1B', alpha=0.6)
+    target_gdf.plot(ax=ax,
+                    # column='flow',
+                    linewidth=0.1, color='#FD0B1B', alpha=0.6, aspect=1)
 
     target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] > high], geometry=points_df['line'])
-    target_gdf.crs = "EPSG:4326"
-    target_gdf.plot(ax=ax, column='flow', linewidth=0.15, color='yellow', alpha=0.8)
+    target_gdf.plot(ax=ax,
+                    # column='flow',
+                    linewidth=0.15, color='yellow', alpha=0.8, aspect=1)
 
     low, high = int(low), int(high)
-    cx.add_basemap(ax, crs=target_gdf.crs, source=cx.providers.CartoDB.Positron)
+
+    if add_basemap:
+        try:
+            cx.add_basemap(ax, crs=target_gdf.crs, source=cx.providers.CartoDB.Positron)
+        except Exception as e:
+            warnings.warn(f"Could not add basemap: {e}")
     plt.text(0.05, 0.95, f"0~{low}~{high}~∞", transform=ax.transAxes, fontsize=12, va='top', ha='left')
 
     plt.xticks([])
