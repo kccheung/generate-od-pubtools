@@ -31,8 +31,7 @@ area_km2 = population_features[0, 1]
 
 print("Raw WorldPop:", raw_pop, "\nArea:", area_km2)
 
-# Scale to match 2020 census for Fukuoka-shi (~1,612,392)
-census_pop = 1_612_392
+# Scale to match 2025 census for Fukuoka-shi (~1,612,392)
 scale = census_pop / raw_pop
 
 scaled_pop = raw_pop * scale

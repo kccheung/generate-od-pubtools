@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 
 
-def show_regional_image(regional_images, idx):
+def show_regional_image(regional_images, idx, high_res=False):
     """
     regional_images: dict[int, BytesIO or PIL.Image or np.ndarray]
     idx: region index key
@@ -16,6 +16,7 @@ def show_regional_image(regional_images, idx):
     # 1) Convert to a PIL image
     if isinstance(img_obj, BytesIO):
         img_pil = Image.open(img_obj)
+        print(img_pil.size)  # (width, height) in pixels, debug use
     elif isinstance(img_obj, Image.Image):
         img_pil = img_obj
     else:
@@ -31,6 +32,8 @@ def show_regional_image(regional_images, idx):
     img_arr = np.array(img_pil)
 
     # 3) Show
+    if high_res:
+        plt.figure(figsize=(10, 10))  # bigger window
     plt.imshow(img_arr)
     plt.axis("off")
     plt.title(f"Region {idx}")
