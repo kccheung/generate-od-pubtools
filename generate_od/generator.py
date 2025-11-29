@@ -1,3 +1,5 @@
+import hashlib
+import json
 import os
 
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
@@ -54,7 +56,7 @@ class Generator:
 
             "norm_type": "layer"
         }
-        self.config["device"] = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.config["device"] = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
     def set_device(self, device):
         self.config["device"] = device
@@ -140,10 +142,39 @@ class Generator:
         self.area = self.area.to_crs(epsg=4326)
 
     def _fetch_worldpop(self, area_shp: gpd.GeoDataFrame):
+        """
+        Fetch WorldPop features for the given area, with simple disk caching.
+
+        If a cache file exists for this area signature, load it.
+        Otherwise, query WorldPop and save the result.
+        """
+        cache_dir = "cache_worldpop"
+        os.makedirs(cache_dir, exist_ok=True)
+
+        # Build a simple signature of the area
+        sig = {
+            "n_regions": int(len(area_shp)),
+            "bounds": list(np.round(area_shp.total_bounds, 5)),  # xmin, ymin, xmax, ymax
+            "crs": str(area_shp.crs)
+        }
+        sig_str = json.dumps(sig, sort_keys=True)
+        cache_key = hashlib.md5(sig_str.encode("utf-8")).hexdigest()[:10]
+        cache_path = os.path.join(cache_dir, f"worldpop_{cache_key}.npz")
+
+        if os.path.exists(cache_path):
+            print(f" **Loading WorldPop features from cache: {cache_path}")
+            data = np.load(cache_path)
+            return data["worldpop"]
+
+        # No cache → fetch from WorldPop as before
+        print(" **Fetching pop features from WorldPop (no cache)...")
         if self.fetch_numproc:
             worldpop_feats = worldpop(area_shp, num_proc=self.fetch_numproc)
         else:
             worldpop_feats = worldpop(area_shp)
+
+        np.savez_compressed(cache_path, worldpop=worldpop_feats, signature=sig_str)
+        print(f" **Saved WorldPop features to cache: {cache_path}")
         return worldpop_feats
 
     def _fetch_sateimgs(self, area_shp: gpd.GeoDataFrame):
