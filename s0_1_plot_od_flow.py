@@ -12,8 +12,9 @@ from utils import od_sanity_print
 
 OD_PATH = "./outputs/od_matrix_liverpool_2025-11-29 16:54:25.789433.csv"
 SHP_PATH = LIVERPOOL_SHP
+# liverpool od quantiles
 LOW = 133
-HIGH = 277
+HIGH = 217
 
 
 def main():
@@ -77,12 +78,17 @@ def main():
     # 3. Plot OD flows
     print(f"Plotting OD arcs with low={args.low}, high={args.high} ...")
 
+    flows = od[od > 0].ravel()
+    for q in [0.5, 0.75, 0.9, 0.95, 0.99]:
+        print(q, np.quantile(flows, q))
+    q_low = np.quantile(flows, 0.75)
+    q_high = np.quantile(flows, 0.97)
     # your plot function should accept an existing axis, or you can let it create inside
     fig = plot_od_arc_chart(
         od,
         geometries,
-        low=args.low,
-        high=args.high,
+        low=q_low,
+        high=q_high,
     )
 
     if args.output:

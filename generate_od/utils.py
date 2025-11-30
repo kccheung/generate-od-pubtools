@@ -287,9 +287,9 @@ def get_YX_area(area_shp):
 
 
 def plot_od_arc_chart(od, geometries,
-                      low=0.1,  # different for every region!
-                      high=0.95,  # different for every region!
-                      add_basemap=False):
+                      low=0,  # different for every region!
+                      high=0,  # different for every region!
+                      add_basemap=True):
     """
     low / high are percentiles between 0 and 1, not raw flow counts.
 
@@ -299,6 +299,11 @@ def plot_od_arc_chart(od, geometries,
 
     Plot the arc chart for the given OD matrix on map.
     """
+
+    if low < 0.01 and high < 0.01:
+        flows = od[od > 0].ravel()
+        low = np.quantile(flows, 0.75)  # default 75% percentile
+        high = np.quantile(flows, 0.97)  # default 97% percentile
 
     font = {'size': 12}
     matplotlib.rc('font', **font)
