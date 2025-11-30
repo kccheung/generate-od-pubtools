@@ -81,8 +81,8 @@ def main():
     flows = od[od > 0].ravel()
     for q in [0.5, 0.75, 0.9, 0.95, 0.99]:
         print(q, np.quantile(flows, q))
-    q_low = np.quantile(flows, 0.75)
-    q_high = np.quantile(flows, 0.97)
+    q_low = np.quantile(flows, 0.80)
+    q_high = np.quantile(flows, 0.99)
     # your plot function should accept an existing axis, or you can let it create inside
     fig = plot_od_arc_chart(
         od,

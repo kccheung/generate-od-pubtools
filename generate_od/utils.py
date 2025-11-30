@@ -300,75 +300,96 @@ def plot_od_arc_chart(od, geometries,
     Plot the arc chart for the given OD matrix on map.
     """
 
+    # If low/high are not given (still near zero), compute from quantiles
     if low < 0.01 and high < 0.01:
         flows = od[od > 0].ravel()
-        low = np.quantile(flows, 0.75)  # default 75% percentile
-        high = np.quantile(flows, 0.97)  # default 97% percentile
+        low = np.quantile(flows, 0.75)
+        high = np.quantile(flows, 0.97)
 
-    font = {'size': 12}
-    matplotlib.rc('font', **font)
+    # 1. Build line GeoDataFrame in original CRS
+    centroids = geometries.centroid
+    line_records = []
+    for i in range(od.shape[0]):
+        for j in range(od.shape[1]):
+            if i != j and od[i, j] > 0:
+                line_records.append([centroids[i], centroids[j], od[i, j]])
 
-    OD = od
-    point = geometries.centroid
-    line = []
-    for i in range(OD.shape[0]):
-        for j in range(OD.shape[1]):
-            if i != j and OD[i][j] > 0:
-                line.append([point[i], point[j], OD[i][j]])
-    points_df = gpd.GeoDataFrame(line, columns=['geometry_o', 'geometry_d', 'flow'])
-    points_df['line'] = points_df.apply(lambda x: LineString([x['geometry_o'], x['geometry_d']]), axis=1)
-
-    f, ax = plt.subplots(1, figsize=(6, 8), dpi=200)
-
-    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] <= low], geometry=points_df['line'])
-
-    # --- DEBUG / SANITY INFO ---
-    print(f"target_gdf total rows: {len(target_gdf)}")
-    print("  non-null geometries:", target_gdf.geometry.notna().sum())
-    print("  non-empty geometries:", (~target_gdf.geometry.is_empty).sum())
-
-    # Check bounds to make sure they are finite
-    bounds = target_gdf.total_bounds  # (minx, miny, maxx, maxy)
-    print("  total_bounds:", bounds)
-
-    if not np.all(np.isfinite(bounds)):
-        warnings.warn(
-            f"Geometry bounds are not finite: {bounds}. "
-            "Cannot safely set aspect; skipping plot."
-        )
-        return None
-
-    print(f"Selected {len(target_gdf)} OD arcs for plotting (low={low}, high={high})")
-    target_gdf.crs = "EPSG:4326"
-    target_gdf.plot(ax=ax,
-                    # column="flow",
-                    linewidth=0.05, alpha=0.4, color='#0308F8',
-        aspect=1  # <- THIS BYPASSES the auto aspect that was failing
+    points_df = gpd.GeoDataFrame(
+        line_records,
+        columns=["geometry_o", "geometry_d", "flow"],
     )
-    target_gdf = gpd.GeoDataFrame(points_df[(points_df['flow'] > low) & (points_df['flow'] <= high)], geometry=points_df['line'])
-    target_gdf.plot(ax=ax,
-                    # column='flow',
-                    linewidth=0.1, color='#FD0B1B', alpha=0.6, aspect=1)
+    points_df["line"] = points_df.apply(
+        lambda x: LineString([x["geometry_o"], x["geometry_d"]]), axis=1
+    )
+    points_df = gpd.GeoDataFrame(points_df, geometry="line", crs=geometries.crs)
 
-    target_gdf = gpd.GeoDataFrame(points_df[points_df['flow'] > high], geometry=points_df['line'])
-    target_gdf.plot(ax=ax,
-                    # column='flow',
-                    linewidth=0.15, color='yellow', alpha=0.8, aspect=1)
+    # 2. Reproject everything to Web Mercator
+    geometries_3857 = geometries.to_crs(epsg=3857)
+    points_3857 = points_df.to_crs(epsg=3857)
 
-    low, high = int(low), int(high)
+    # 3. Split into bands in 3857
+    band_low = points_3857[points_3857["flow"] <= low].copy()
+    band_mid = points_3857[(points_3857["flow"] > low) & (points_3857["flow"] <= high)].copy()
+    band_high = points_3857[points_3857["flow"] > high].copy()
 
+    print(f"Selected {len(points_3857)} OD arcs; "
+          f"low={low:.1f}, high={high:.1f}")
+
+    # 4. Plot everything on a single figure/axis
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=200)
+
+    # base boundary
+    geometries_3857.boundary.plot(ax=ax, linewidth=0.5, color="grey", alpha=0.7)
+
+    # low flows
+    band_low.plot(
+        ax=ax,
+        linewidth=0.05,
+        color="#0308F8",
+        alpha=0.2,
+    )
+
+    # medium flows
+    band_mid.plot(
+        ax=ax,
+        linewidth=0.08,
+        color="#FD0B1B",
+        alpha=0.5,
+    )
+
+    # high flows
+    band_high.plot(
+        ax=ax,
+        linewidth=0.12,
+        color="yellow",
+        alpha=0.8,
+    )
+
+    # 5. Adjust extent
+    minx, miny, maxx, maxy = geometries_3857.total_bounds
+    pad_x = (maxx - minx) * 0.05
+    pad_y = (maxy - miny) * 0.05
+    ax.set_xlim(minx - pad_x, maxx + pad_x)
+    ax.set_ylim(miny - pad_y, maxy + pad_y)
+    ax.set_aspect("equal")
+
+    # 6. Basemap
     if add_basemap:
         try:
-            cx.add_basemap(ax, crs=target_gdf.crs, source=cx.providers.CartoDB.Positron)
+            cx.add_basemap(ax, crs=geometries_3857.crs,
+                           source=cx.providers.CartoDB.Positron)
         except Exception as e:
             warnings.warn(f"Could not add basemap: {e}")
-    plt.text(0.05, 0.95, f"0~{low}~{high}~∞", transform=ax.transAxes, fontsize=12, va='top', ha='left')
 
-    plt.xticks([])
-    plt.yticks([])
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
+    # 7. Cosmetics
+    low_i, high_i = int(low), int(high)
+    plt.text(0.05, 0.95, f"0~{low_i}~{high_i}~∞",
+             transform=ax.transAxes, fontsize=12,
+             va="top", ha="left")
 
-    return f
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for side in ["right", "top", "left", "bottom"]:
+        ax.spines[side].set_visible(False)
+
+    return fig
