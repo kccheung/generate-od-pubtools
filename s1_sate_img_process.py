@@ -11,7 +11,7 @@ from constants import *
 from utils import show_regional_image
 
 # Load your regional boundaries
-area_shp = gpd.read_file(out_path)
+area_shp = gpd.read_file(FUKUOKA_SHP)
 
 # Set your Esri token (apply at https://developers.arcgis.com/)
 esri_token = os.getenv("ESRI_TOKEN", "public_endpoint_without_token")  # seems no need for my use case?

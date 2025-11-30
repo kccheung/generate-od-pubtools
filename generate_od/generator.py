@@ -2,6 +2,9 @@ import hashlib
 import json
 import os
 
+from constants import FUKUOKA_POPULATION_CSV
+from utils import build_fukuoka_features_from_csv
+
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
 import shutil
 
@@ -198,8 +201,17 @@ class Generator:
             raise Exception("Area not loaded. Load area first.")
 
         # fetch worldpop
-        print(" **Fetching pop features from WorldPop...")
-        worldpop = self._fetch_worldpop(self.area)
+        # instead of: worldpop = self._fetch_worldpop(self.area)
+        if self.city_name == "Fukuoka":
+            # Use official CSV instead of WorldPop for Fukuoka wards
+            worldpop = build_fukuoka_features_from_csv(
+                self.area,
+                csv_path=FUKUOKA_POPULATION_CSV,
+                ward_col="N03_005",  # adjust if your shapefile column differs
+            )
+        else:
+            print(" **Fetching pop features from WorldPop...")
+            worldpop = self._fetch_worldpop(self.area)
 
         # fetch sate imgs
         print(" **Fetching img features based on Satellite Images from Esri...")
