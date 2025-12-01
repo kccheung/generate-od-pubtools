@@ -1,6 +1,7 @@
 # FUKUOKA_SHP = "./assets/fukuoka_city.shp"
 # FUKUOKA_SHP = "./assets/fukuoka_wards_n03.shp"  # 7 wards only
-FUKUOKA_SHP = "./assets/fukuoka_wards_n03b.shp"  # 950 sub-wards
+# FUKUOKA_SHP = "./assets/fukuoka_wards_n03b.shp"  # 950 sub-wards
+FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431.shp"  # 431 grid cells
 CACHE_PATH = "./assets/regional_images_fukuoka_city.pkl"
 census_pop = 1_612_392  # Fukuoka City 2025 census population
 FUKUOKA_POPULATION_CSV = "./assets/401307_population_touroku_population_202503.csv"

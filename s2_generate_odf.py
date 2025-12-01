@@ -31,10 +31,14 @@ if __name__ == "__main__":
     my_generator.load_area(area)
 
     # 4. generate OD matrix and capture the result
-    od_hat = my_generator.generate()
+    # od_hat = my_generator.generate()
+    od_hat = my_generator.generate(
+        # sample_times=5
+        sample_times=50
+    )
     od_sanity_print(od_hat)
 
-    # save the OD                               matrix to CSV
+    # save the OD matrix to CSV
     od_df = pd.DataFrame(
         od_hat,
         index=my_generator.area.index,  # or use area["region_id"] if you have

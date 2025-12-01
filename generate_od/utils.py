@@ -306,26 +306,23 @@ def plot_od_arc_chart(od, geometries,
         low = np.quantile(flows, 0.75)
         high = np.quantile(flows, 0.97)
 
-    # 1. Build line GeoDataFrame in original CRS
-    centroids = geometries.centroid
+    # 1. Ensure CRS and project to Web Mercator (EPSG:3857)
+    g = geometries.copy()
+    if g.crs is None:
+        g = g.set_crs("EPSG:4326")
+    g_3857 = g.to_crs(epsg=3857)
+
+    # 2. Compute centroids in 3857 and build line GeoDataFrame in 3857
+    centroids = g_3857.geometry.centroid
     line_records = []
     for i in range(od.shape[0]):
         for j in range(od.shape[1]):
-            if i != j and od[i, j] > 0:
-                line_records.append([centroids[i], centroids[j], od[i, j]])
+            if i == j or od[i, j] <= 0:
+                continue
+            line = LineString([centroids.iloc[i], centroids.iloc[j]])
+            line_records.append({"flow": od[i, j], "geometry": line})
 
-    points_df = gpd.GeoDataFrame(
-        line_records,
-        columns=["geometry_o", "geometry_d", "flow"],
-    )
-    points_df["line"] = points_df.apply(
-        lambda x: LineString([x["geometry_o"], x["geometry_d"]]), axis=1
-    )
-    points_df = gpd.GeoDataFrame(points_df, geometry="line", crs=geometries.crs)
-
-    # 2. Reproject everything to Web Mercator
-    geometries_3857 = geometries.to_crs(epsg=3857)
-    points_3857 = points_df.to_crs(epsg=3857)
+    points_3857 = gpd.GeoDataFrame(line_records, geometry="geometry", crs=g_3857.crs)
 
     # 3. Split into bands in 3857
     band_low = points_3857[points_3857["flow"] <= low].copy()
@@ -339,6 +336,7 @@ def plot_od_arc_chart(od, geometries,
     fig, ax = plt.subplots(figsize=(8, 8), dpi=200)
 
     # base boundary
+    geometries_3857 = g_3857
     geometries_3857.boundary.plot(ax=ax, linewidth=0.5, color="grey", alpha=0.7)
 
     # low flows

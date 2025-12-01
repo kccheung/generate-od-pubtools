@@ -11,6 +11,104 @@ import geopandas as gpd
 from constants import FUKUOKA_WARD_STATS
 
 
+import numpy as np
+import geopandas as gpd
+from shapely.geometry import LineString
+import matplotlib.pyplot as plt
+import contextily as cx
+from matplotlib.collections import LineCollection
+import matplotlib.cm as cm
+import matplotlib.colors as colors
+
+
+def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
+    """
+    Plot top-k OD flows with a single gradient color and a colorbar legend.
+
+    od          : (N, N) OD matrix
+    geometries  : GeoDataFrame of N zones
+    k           : number of strongest flows to draw
+    cmap_name   : matplotlib colormap name, e.g. 'Blues', 'Reds', 'viridis'
+    """
+    # 1. project to Web Mercator
+    g = geometries.to_crs(epsg=3857).copy()
+    centroids = g.geometry.centroid
+
+    n = od.shape[0]
+    assert od.shape[0] == od.shape[1]
+
+    # 2. flatten OD and ignore diagonal
+    i_idx, j_idx = np.where(~np.eye(n, dtype=bool))
+    flows = od[i_idx, j_idx]
+
+    # only keep positive flows
+    mask_pos = flows > 0
+    i_idx = i_idx[mask_pos]
+    j_idx = j_idx[mask_pos]
+    flows = flows[mask_pos]
+
+    if len(flows) == 0:
+        raise ValueError("No positive flows to plot.")
+
+    # 3. select top-k strongest flows
+    k = min(k, len(flows))
+    top_idx = np.argpartition(-flows, k-1)[:k]
+    i_top = i_idx[top_idx]
+    j_top = j_idx[top_idx]
+    f_top = flows[top_idx]
+
+    # 4. build LineStrings
+    line_geoms = [
+        LineString([centroids.iloc[i], centroids.iloc[j]])
+        for i, j in zip(i_top, j_top)
+    ]
+
+    # 5. set up colormap + normalisation
+    vmin, vmax = float(f_top.min()), float(f_top.max())
+    norm = colors.Normalize(vmin=vmin, vmax=vmax)
+    cmap = cm.get_cmap(cmap_name)
+
+    # line widths (optional: slightly thicker for stronger flows)
+    widths = 0.3 + 2.7 * (f_top - vmin) / (vmax - vmin + 1e-9)
+
+    # 6. create LineCollection
+    lc = LineCollection(
+        [np.array(line.coords) for line in line_geoms],
+        array=f_top,          # values used for colormap
+        cmap=cmap,
+        norm=norm,
+        linewidths=widths,
+        alpha=0.8,
+    )
+
+    # 7. plot
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=400)
+
+    # base polygons as light outline
+    g.boundary.plot(ax=ax, linewidth=0.3, color="grey", alpha=0.5)
+
+    ax.add_collection(lc)
+
+    # set limits from geometries
+    minx, miny, maxx, maxy = g.total_bounds
+    ax.set_xlim(minx, maxx)
+    ax.set_ylim(miny, maxy)
+
+    # add basemap
+    cx.add_basemap(ax, crs=g.crs, source=cx.providers.CartoDB.Positron)
+    ax.set_axis_off()
+
+    # 8. colorbar legend
+    sm = cm.ScalarMappable(norm=norm, cmap=cmap)
+    sm.set_array([])  # required for matplotlib < 3.8
+    cbar = fig.colorbar(sm, ax=ax, fraction=0.03, pad=0.02)
+    cbar.set_label("Predicted flow (commuters)")
+
+    ax.set_title(f"Top {k} OD flows (gradient {cmap_name})")
+
+    return fig
+
+
 def load_fukuoka_ward_population_from_csv(csv_path: str) -> dict:
     """
     Read Fukuoka City's registered population CSV and return

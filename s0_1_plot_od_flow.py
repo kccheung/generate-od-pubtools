@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 
 from constants import FUKUOKA_SHP, LIVERPOOL_SHP  # same as in s1_sate_img_process.py
 from generate_od.utils import plot_od_arc_chart
-from utils import od_sanity_print
+from utils import od_sanity_print, plot_od_topk_gradient
 
 # OD_PATH = "./outputs/od_matrix_liverpool_2025-11-29 16:54:25.789433.csv"
-OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_162929.892909.csv"
+# OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_162929.892909.csv"
+OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_222810.287300.csv"  # sample_times=5
 # SHP_PATH = LIVERPOOL_SHP
 SHP_PATH = FUKUOKA_SHP
 # liverpool od quantiles
@@ -82,16 +83,18 @@ def main():
     flows = od[od > 0].ravel()
     for q in [0.5, 0.75, 0.9, 0.95, 0.99]:
         print(q, np.quantile(flows, q))
-    q_low = np.quantile(flows, 0.80)
-    q_high = np.quantile(flows, 0.97)
+    q_low = np.quantile(flows, 0.95)
+    q_high = np.quantile(flows, 0.999)
     print(f"Plotting OD arcs with low={q_low}, high={q_high} ...")
     # your plot function should accept an existing axis, or you can let it create inside
-    fig = plot_od_arc_chart(
-        od,
-        geometries,
-        low=q_low,
-        high=q_high,
-    )
+    # fig = plot_od_arc_chart(
+    #     od,
+    #     geometries,
+    #     low=q_low,
+    #     high=q_high,
+    # )
+    fig = plot_od_topk_gradient(od, gdf, k=100, cmap_name="Reds")
+    # fig.savefig("od_fukuoka_top1000_blues.png", bbox_inches="tight", dpi=200)
 
     if args.output:
         print(f"Saving figure to {args.output} ...")

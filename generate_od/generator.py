@@ -267,12 +267,27 @@ class Generator:
             n, e = net
 
             # generate OD matrix
-            e_hats = []
-            for _ in tqdm(range(sample_times), desc=" **Generating OD matrix"):
+            # e_hats = []
+            # for _ in tqdm(range(sample_times), desc=" **Generating OD matrix"):
+            #     net_hat = self.od_model.DDIM_sample_loop(n.shape, e.shape, c)
+            #     _, e_hat = net_hat
+            #     e_hats.append(e_hat.detach().cpu().numpy())
+            # e_hat = np.mean(np.stack(e_hats), axis=0)
+
+            # change to online mean to reduce memory usage, as my Macbook has limited RAM
+            e_hat_mean = None
+            for k in tqdm(range(sample_times), desc=" **Generating OD matrix"):
                 net_hat = self.od_model.DDIM_sample_loop(n.shape, e.shape, c)
                 _, e_hat = net_hat
-                e_hats.append(e_hat.detach().cpu().numpy())
-            e_hat = np.mean(np.stack(e_hats), axis=0)
+                e_hat_np = e_hat.detach().cpu().numpy()
+                if e_hat_mean is None:
+                    e_hat_mean = e_hat_np
+                else:
+                    # Online mean: new_mean = old_mean + (x - old_mean) / (k+1)
+                    e_hat_mean += (e_hat_np - e_hat_mean) / (k + 1)
+
+            e_hat = e_hat_mean
+
             od_hat = e_hat
             od_hat = self.data_scalers["od"].inverse_transform(od_hat.reshape([-1, 1])).reshape([od_hat.shape[0], od_hat.shape[1]])
             od_hat = self.data_scalers["od_normer"].inverse_transform(od_hat)
