@@ -1,12 +1,15 @@
+# A script that builds a ~300-zone grid from current 950 sub-wards Fukuoka shp
+
 import os
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import box
 
 # ---- settings ----
-INPUT_SHP = "./assets/fukuoka_wards_n03b.shp"      # your 950-subward file
-OUTPUT_SHP = "./assets/fukuoka_shi_grid_300.shp"       # new coarse grid
-TARGET_ZONES = 300                                 # approx number of cells
+INPUT_SHP = "./assets/fukuoka_wards_n03b.shp"  # your 950-subward file
+OUTPUT_SHP = "./assets/fukuoka_shi_grid_300.shp"  # new coarse grid
+TARGET_ZONES = 300  # approx number of cells
+
 
 def main():
     # 1. Load original 950-zone shapefile

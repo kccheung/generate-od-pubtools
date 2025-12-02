@@ -3,6 +3,12 @@
 # FUKUOKA_SHP = "./assets/fukuoka_wards_n03b.shp"  # 950 sub-wards
 FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431.shp"  # 431 grid cells
 CACHE_PATH = "./assets/regional_images_fukuoka_city.pkl"
+
+# OD_PATH = "./outputs/od_matrix_liverpool_2025-11-29 16:54:25.789433.csv"
+# OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_162929.892909.csv"
+# OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_222810.287300.csv"  # sample_times=5
+OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-02_052952.606796.csv"  # sample_times=50
+
 census_pop = 1_612_392  # Fukuoka City 2025 census population
 FUKUOKA_POPULATION_CSV = "./assets/401307_population_touroku_population_202503.csv"
 
