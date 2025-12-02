@@ -52,18 +52,26 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
 
     # 3. select top-k strongest flows
     k = min(k, len(flows))
-    top_idx = np.argpartition(-flows, k-1)[:k]
+    top_idx = np.argpartition(-flows, k - 1)[:k]
+
+    # take the corresponding indices / flows
     i_top = i_idx[top_idx]
     j_top = j_idx[top_idx]
     f_top = flows[top_idx]
 
-    # 4. build LineStrings
+    # sort by flow ascending so weakest are drawn first, strongest last (on top)
+    order = np.argsort(f_top)  # ascending
+    i_top = i_top[order]
+    j_top = j_top[order]
+    f_top = f_top[order]
+
+    # 4. build LineStrings in this sorted order
     line_geoms = [
         LineString([centroids.iloc[i], centroids.iloc[j]])
         for i, j in zip(i_top, j_top)
     ]
 
-    # 5. set up colormap + normalisation
+    # 5. set up colormap + normalisation based on actual OD values
     vmin, vmax = float(f_top.min()), float(f_top.max())
     norm = colors.Normalize(vmin=vmin, vmax=vmax)
     cmap = cm.get_cmap(cmap_name)
@@ -71,10 +79,10 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
     # line widths (optional: slightly thicker for stronger flows)
     widths = 0.3 + 2.7 * (f_top - vmin) / (vmax - vmin + 1e-9)
 
-    # 6. create LineCollection
+    # 6. create LineCollection; array=f_top so colorbar reflects OD values
     lc = LineCollection(
         [np.array(line.coords) for line in line_geoms],
-        array=f_top,          # values used for colormap
+        array=f_top,
         cmap=cmap,
         norm=norm,
         linewidths=widths,
@@ -100,9 +108,11 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
 
     # 8. colorbar legend
     sm = cm.ScalarMappable(norm=norm, cmap=cmap)
-    sm.set_array([])  # required for matplotlib < 3.8
+    sm.set_array(f_top)  # so the colorbar is tied to the actual OD values
     cbar = fig.colorbar(sm, ax=ax, fraction=0.03, pad=0.02)
     cbar.set_label("Predicted flow (commuters)")
+    # format ticks as integers for readability
+    cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: f"{int(round(x))}"))
 
     ax.set_title(f"Top {k} OD flows (gradient {cmap_name})")
 
