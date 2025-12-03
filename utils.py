@@ -177,6 +177,13 @@ def od_sanity_print(od_hat):
     print("Zero diagonal? ", (od_hat.diagonal() == 0).all())
 
 
+def population_sanity_print(worldpop):
+    # --- WorldPop population sanity check ---
+    total_pop = float(worldpop[:, 0].sum())
+    n_cells = len(worldpop[:, 0])
+    print(f"[WorldPop sanity] Total population over {n_cells} cells: {total_pop:,.0f}")
+
+
 def show_regional_image(regional_images, idx, high_res=False):
     """
     regional_images: dict[int, BytesIO or PIL.Image or np.ndarray]

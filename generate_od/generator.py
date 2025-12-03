@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 
-from constants import FUKUOKA_POPULATION_CSV
+from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT
 from utils import build_fukuoka_features_from_csv
 
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
@@ -17,7 +17,7 @@ import geopandas as gpd
 import open_clip
 from huggingface_hub import hf_hub_download
 
-from .worldpop import worldpop
+from .worldpop import worldpop, worldpop_from_local_tif
 from .sateimgs import area_SateImgs, check_download_RemoteCLIP, extract_imgfeats_RemoteCLIP
 from .model import *
 from .utils import *
@@ -169,12 +169,20 @@ class Generator:
             data = np.load(cache_path)
             return data["worldpop"]
 
-        # No cache → fetch from WorldPop as before
-        print(" **Fetching pop features from WorldPop (no cache)...")
-        if self.fetch_numproc:
-            worldpop_feats = worldpop(area_shp, num_proc=self.fetch_numproc)
+        # No cache
+        # --- choose method based on city_name ---
+        if getattr(self, "city_name", None) == "Fukuoka_shi":
+            # use local WorldPop TIFF instead of ArcGIS ImageServer
+            print(" **Fetching pop features from WorldPop (local TIFF)...")
+            tif_path = JPN_TIF_PATH
+            worldpop_feats = worldpop_from_local_tif(area_shp, tif_path)
         else:
-            worldpop_feats = worldpop(area_shp)
+            # → fetch from WorldPop as before
+            print(" **Fetching pop features from WorldPop (no cache)...")
+            if self.fetch_numproc:
+                worldpop_feats = worldpop(area_shp, num_proc=self.fetch_numproc)
+            else:
+                worldpop_feats = worldpop(area_shp)
 
         np.savez_compressed(cache_path, worldpop=worldpop_feats, signature=sig_str)
         print(f" **Saved WorldPop features to cache: {cache_path}")
@@ -218,6 +226,28 @@ class Generator:
         imgs = self._fetch_sateimgs(self.area)
         img_feats = extract_imgfeats_RemoteCLIP(self.vision_model, self.model_name, imgs, self.config["device"])
 
+        # -– Calibrate grid area to match official 343.39 km²
+        # For OD modelling, mainly care about relative density and using population/area as features
+        # 	keep the shapes,
+        # 	rescale area so that the total matches official stats, just like we did with population.
+        if getattr(self, "city_name", None) == "Fukuoka_shi":
+            raw_pop_total = worldpop[:, 0].sum()
+            raw_area_total = worldpop[:, 1].sum()
+
+            target_pop_total = FUKUOKA_CITY_FEAT["pop_total"]  # or from census / Hub
+            target_area_total = FUKUOKA_CITY_FEAT["area_km2"]  # km²
+
+            if raw_pop_total > 0:
+                worldpop[:, 0] *= target_pop_total / raw_pop_total
+
+            if raw_area_total > 0:
+                worldpop[:, 1] *= target_area_total / raw_area_total
+
+            print(
+                f"[Fukuoka calibration]\n"
+                f"raw_pop={raw_pop_total:.1f}, raw_area={raw_area_total:.2f} ->\n"
+                f"scaled_pop={worldpop[:, 0].sum():.1f}, scaled_area={worldpop[:, 1].sum():.2f}"
+            )
         nfeat = np.concatenate([img_feats, np.log1p(worldpop)], axis=1)
 
         # fetch edge features

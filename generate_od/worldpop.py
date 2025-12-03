@@ -6,10 +6,79 @@ from multiprocessing import Pool
 
 import numpy as np
 import geopandas as gpd
+import rasterio
 from rasterio.mask import mask
 from rasterio.io import MemoryFile
 
 from .utils import calculate_utm_epsg
+
+
+def worldpop_from_local_tif(area_shp: gpd.GeoDataFrame,
+                            tif_path: str,
+                            area_crs_epsg: int = 32652) -> np.ndarray:  # UTM 52N instead of 3857, more accurate?
+                            # area_crs_epsg: int = 3857) -> np.ndarray:
+    """
+    Compute per-zone population and area using a local WorldPop raster.
+
+    Parameters
+    ----------
+    area_shp : GeoDataFrame
+        Polygons defining your zones (e.g. 431 grid cells for Fukuoka-shi).
+        Can be in any CRS; will be reprojected as needed.
+    tif_path : str
+        Path to WorldPop GeoTIFF, e.g. "./assets/jpn_pop_2025_CN_100m_R2025A_v1.tif".
+        This raster is in Geographic WGS84 (EPSG:4326), values = people per pixel.
+    area_crs_epsg : int, optional
+        EPSG code used to compute area in m² (default 3857, Web Mercator).
+        For more accurate area you could use a local UTM zone.
+
+    Returns
+    -------
+    feat : np.ndarray of shape (N, 2)
+        Column 0: population per zone (sum of pixel values)
+        Column 1: area per zone in km²
+    """
+    if area_shp.crs is None:
+        raise ValueError("area_shp must have a CRS defined.")
+
+    # 1. Open the WorldPop raster
+    with rasterio.open(tif_path) as src:
+        raster_crs = src.crs
+
+        # 2. Reproject polygons to raster CRS for masking
+        if area_shp.crs != raster_crs:
+            area_for_mask = area_shp.to_crs(raster_crs)
+        else:
+            area_for_mask = area_shp
+
+        # 3. Separate geometry for area calculation in a projected CRS
+        area_for_area = area_shp.to_crs(epsg=area_crs_epsg)
+
+        populations = []
+        areas_km2 = []
+
+        it = zip(area_for_mask.geometry, area_for_area.geometry)
+        for geom_mask, geom_area in tqdm(
+            it,
+            total=len(area_shp),
+            desc=" -- Population of regions (local TIFF)"
+        ):
+            # 3a. Sum population from raster inside polygon
+            try:
+                out_img, _ = mask(src, [geom_mask], crop=True)
+                # WorldPop pixels already represent "people per pixel"
+                pop = float(out_img[out_img > 0].sum())
+            except Exception:
+                pop = 0.0
+
+            # 3b. Compute area in km²
+            area_km2 = float(geom_area.area) / 1e6
+
+            populations.append(pop)
+            areas_km2.append(area_km2)
+
+    feat = np.column_stack([populations, areas_km2])
+    return feat
 
 
 def population_one_region(args):

@@ -2,19 +2,20 @@ import datetime
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from constants import LIVERPOOL_SHP, FUKUOKA_SHP
 from generate_od import generator
 # from constants import out_path  # if you want Fukuoka instead of Liverpool
 import pandas as pd
 
-from utils import od_sanity_print
+from utils import od_sanity_print, plot_od_topk_gradient, population_sanity_print
 
 if __name__ == "__main__":
     # 1. init generator
     my_generator = generator.Generator()
     # my_generator.city_name = "Fukuoka"  # no worldpop query for Fukuoka
-    my_generator.city_name = "Fukuoka_shi"  # need worldpop query for Fukuoka sub-wards
+    my_generator.city_name = "Fukuoka_shi"  # local worldpop TIFF for Fukuoka sub-wards
 
     # 2. set satellite token
     my_generator.set_satetoken("xxxxxxxxxxxxxxx")  # ArcGIS World_Imagery token
@@ -29,6 +30,17 @@ if __name__ == "__main__":
     print(area.head())
 
     my_generator.load_area(area)
+    print(len(my_generator.area))
+    print(my_generator.area.head())
+
+    # debug fukuoka city population
+    # worldpop = my_generator._fetch_worldpop(my_generator.area)
+    # worldpop_arr = np.asarray(worldpop)
+    # print("WorldPop raw feat shape:", worldpop_arr.shape)
+    # print("  sum(population \t\t\t\tcol 0):", worldpop_arr[:, 0].sum())
+    # print(f"  sum({worldpop_arr.shape[0]}-cell grid area_km2\tcol 1):", worldpop_arr[:, 1].sum())
+    # population_sanity_print(worldpop)  # pass only population to sanity check
+    # breakpoint()
 
     # 4. generate OD matrix and capture the result
     # od_hat = my_generator.generate()
@@ -49,7 +61,12 @@ if __name__ == "__main__":
     od_df.to_csv(f"./outputs/od_matrix_fukuoka_{dt_str}.csv")
 
     # 5. plot and show the arc chart
-    fig = my_generator.plot_arc_chart()
-    # fig.savefig(f"./outputs/od_arc_liverpool_{dt_str}.png", dpi=200, bbox_inches="tight")
-    fig.savefig(f"./outputs/od_arc_fukuoka_{dt_str}.png", dpi=200, bbox_inches="tight")
-    plt.show()  # this is the bit you were missing
+    should_save = False
+    fig = plot_od_topk_gradient(od_hat, area, k=100, cmap_name="Reds")
+    # fig.savefig("od_fukuoka_top1000_blues.png", bbox_inches="tight", dpi=200)
+
+    # if should_save:
+    #     print(f"Saving figure to {args.output} ...")
+    #     fig.savefig(args.output, dpi=300, bbox_inches="tight")
+    # else:
+    plt.show()
