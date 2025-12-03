@@ -1,4 +1,8 @@
 import numpy as np
+import pandas as pd
+
+from utils import od_sanity_print
+from constants import OD_PATH_LIVERPOOL
 
 """
 Verify our reproduction by comparing the OD matrix our pipeline generates for GB_Liverpool with 
@@ -7,12 +11,16 @@ the example generation.npy provided by the authors (MSE / correlation / visual p
 TODO: Then for Fukuoka, generate a new OD matrix using the same pipeline and discuss SDG relevance etc.
 """
 
-data = np.load("assets/example_data/CommutingOD/GB_Liverpool/generation.npy", allow_pickle=True)
-print(type(data), getattr(data, "shape", None))
-# If it's an object array:
-# print(data.item().keys())
+od_ref = np.load("./assets/example_data/CommutingOD/GB_Liverpool/generation.npy", allow_pickle=True)
+print(type(od_ref), getattr(od_ref, "shape", None))
+od_sanity_print(od_ref)
+print(od_ref)
 
-print(data)
+df = pd.read_csv(OD_PATH_LIVERPOOL, header=0, index_col=0)
+od_hat = df.to_numpy(dtype=float)
+print("OD shape (after dropping labels):", od_hat.shape)
+od_sanity_print(od_hat)
+print(od_hat)
 
 """
 <class 'numpy.ndarray'> (252, 252)

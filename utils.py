@@ -1,24 +1,19 @@
 # in utils.py (or wherever you keep it)
-import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
 from io import BytesIO
 
-# fukuoka_population.py
-import pandas as pd
-import geopandas as gpd
-
-from constants import FUKUOKA_WARD_STATS
-
-
-import numpy as np
-import geopandas as gpd
-from shapely.geometry import LineString
-import matplotlib.pyplot as plt
 import contextily as cx
-from matplotlib.collections import LineCollection
+import geopandas as gpd
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
+# fukuoka_population.py
+import pandas as pd
+from PIL import Image
+from matplotlib.collections import LineCollection
+from shapely.geometry import LineString
+
+from constants import FUKUOKA_WARD_STATS
 
 
 def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
@@ -117,6 +112,25 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
     ax.set_title(f"Top {k} OD flows (gradient {cmap_name})")
 
     return fig
+
+
+def rmse(F, F_hat):
+    diff = F - F_hat
+    return np.sqrt(np.mean(diff**2))
+
+
+def nrmse(F, F_hat):
+    # as in their dataset paper: normalize by variance around mean of true F
+    F_mean = F.mean()
+    denom = np.sqrt(np.mean((F - F_mean)**2))
+    return rmse(F, F_hat) / denom
+
+
+def cpc(F, F_hat):
+    # Common Part of Commuting
+    numerator = 2 * np.sum(np.minimum(F, F_hat))
+    denominator = np.sum(F) + np.sum(F_hat)
+    return numerator / denominator
 
 
 def load_fukuoka_ward_population_from_csv(csv_path: str) -> dict:
