@@ -45,9 +45,14 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
     if len(flows) == 0:
         raise ValueError("No positive flows to plot.")
 
-    # 3. select top-k strongest flows
-    k = min(k, len(flows))
-    top_idx = np.argpartition(-flows, k - 1)[:k]
+    # 3. select top-k strongest flows (support k as count or top-fraction)
+    if isinstance(k, float) and 0 < k < 1:  # fraction for decimal k in (0, 1)
+        k_count = max(1, int(np.ceil(k * len(flows))))
+    elif isinstance(k, (int, np.integer)) and k >= 1:  # top-k count
+        k_count = min(int(k), len(flows))
+    else:
+        raise ValueError("`k` must be a positive integer or a float in (0,1) representing fraction")
+    top_idx = np.argpartition(-flows, k_count - 1)[:k_count]
 
     # take the corresponding indices / flows
     i_top = i_idx[top_idx]

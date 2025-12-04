@@ -5,8 +5,10 @@ FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431.shp"  # 431-cell grid from 950 sub-
 CACHE_PATH = "./assets/regional_images_fukuoka_city.pkl"
 JPN_TIF_PATH = "./assets/jpn_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73951
 GBR_TIF_PATH = "./assets/gbr_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=49113
+FRA_TIF_PATH = "./assets/fra_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73407
 
-OD_PATH_LIVERPOOL = "./outputs/od_matrix_liverpool_2025-12-03_174537.224411.csv"
+# OD_PATH_LIVERPOOL = "./outputs/od_matrix_liverpool_2025-12-03_174537.224411.csv"
+OD_PATH_LIVERPOOL = "./outputs/od_liverpool_imageexport/od_matrix_liverpool_2025-12-02_203358.822592.csv"
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_162929.892909.csv"
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_222810.287300.csv"  # sample_times=5
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-02_052952.606796.csv"  # sample_times=50
@@ -14,9 +16,11 @@ OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-03_150406.647073.csv"  # sample_t
 
 FUKUOKA_SHI = "Fukuoka_shi"
 LIVERPOOL = "Liverpool"
+PARIS = "Paris"
 MAPPING = {
     FUKUOKA_SHI: JPN_TIF_PATH,
     LIVERPOOL: GBR_TIF_PATH,
+    PARIS: FRA_TIF_PATH,
 }
 
 FUKUOKA_CITY_FEAT = {
@@ -26,6 +30,7 @@ FUKUOKA_CITY_FEAT = {
 FUKUOKA_POPULATION_CSV = "./assets/401307_population_touroku_population_202503.csv"
 
 LIVERPOOL_SHP = "./assets/example_data/shapefile/GB_Liverpool/regions.shp"
+PARIS_SHP = "./assets/example_data/shapefile/FR_Paris/Paris.shp"
 
 # constants.py (or a new module)
 FUKUOKA_WARD_STATS = {

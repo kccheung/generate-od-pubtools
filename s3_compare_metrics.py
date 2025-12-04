@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from utils import od_sanity_print
+from utils import od_sanity_print, rmse, nrmse, cpc
 from constants import OD_PATH_LIVERPOOL
 
 """
 Verify our reproduction by comparing the OD matrix our pipeline generates for GB_Liverpool with 
 the example generation.npy provided by the authors (MSE / correlation / visual pattern).
-
-TODO: Then for Fukuoka, generate a new OD matrix using the same pipeline and discuss SDG relevance etc.
 """
 
 od_ref = np.load("./assets/example_data/CommutingOD/GB_Liverpool/generation.npy", allow_pickle=True)
@@ -18,9 +16,17 @@ print(od_ref)
 
 df = pd.read_csv(OD_PATH_LIVERPOOL, header=0, index_col=0)
 od_hat = df.to_numpy(dtype=float)
-print("OD shape (after dropping labels):", od_hat.shape)
+print("OD_HAT shape (after dropping labels):", od_hat.shape)
 od_sanity_print(od_hat)
 print(od_hat)
+
+scale = od_ref.sum() / od_hat.sum()
+od_hat_scaled = od_hat * scale
+
+print("Scaled total flows:", od_hat_scaled.sum())
+print("RMSE (scaled):", rmse(od_ref, od_hat_scaled))
+print("NRMSE (scaled):", nrmse(od_ref, od_hat_scaled))
+print("CPC (scaled):", cpc(od_ref, od_hat_scaled))
 
 """
 <class 'numpy.ndarray'> (252, 252)
@@ -31,4 +37,18 @@ print(od_hat)
  [  3.   4.   5. ...   0.  92.  64.]
  [  1.   1.   3. ... 190.   0. 105.]
  [  4.   5.   9. ...  93.  78.   0.]]
+"""
+"""
+vs. od_matrix_liverpool_2025-12-03_174537.224411
+Scaled total flows: 4883625.0
+RMSE (scaled): 74.63998360095168
+NRMSE (scaled): 1.0175715743636948
+CPC (scaled): 0.708976188958977
+"""
+"""
+vs. od_liverpool_imageexport/od_matrix_liverpool_2025-12-02_203358.822592.csv
+Scaled total flows: 4883625.0
+RMSE (scaled): 74.44036127764443
+NRMSE (scaled): 1.0148501107190633
+CPC (scaled): 0.7028729071411474
 """

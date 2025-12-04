@@ -75,6 +75,14 @@ The `worldpop()` function automatically:
 - Calculates region areas in square kilometers
 - Returns a numpy array with population and area features for each region
 
+### WorldPop population rasters
+
+To reproduce the experiments using alternative worldpop data source, first download the WorldPop rasters:
+
+```bash
+bash download_worldpop.sh
+```
+
 #### Satellite Image Processing (BONUS)
 
 To download and process satellite images for your regions using Esri's World Imagery service:

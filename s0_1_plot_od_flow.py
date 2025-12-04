@@ -107,7 +107,10 @@ def main():
     #     low=q_low,
     #     high=q_high,
     # )
-    fig = plot_od_topk_gradient(od, gdf, k=1000, cmap_name="Reds")
+    fig = plot_od_topk_gradient(od, gdf,
+                                k=0.1,  # fraction of top flows
+                                # k=100,
+                                cmap_name="Reds")
     # fig.savefig("od_fukuoka_top1000_blues.png", bbox_inches="tight", dpi=200)
 
     if args.output:

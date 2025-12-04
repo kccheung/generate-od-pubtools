@@ -4,7 +4,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 
-from constants import LIVERPOOL_SHP, FUKUOKA_SHP, FUKUOKA_SHI, LIVERPOOL
+from constants import LIVERPOOL_SHP, FUKUOKA_SHP, FUKUOKA_SHI, LIVERPOOL, PARIS_SHP, PARIS
 from generate_od import generator
 # from constants import out_path  # if you want Fukuoka instead of Liverpool
 import pandas as pd
@@ -16,14 +16,16 @@ if __name__ == "__main__":
     my_generator = generator.Generator()
     # my_generator.city_name = "Fukuoka"  # no worldpop query for Fukuoka
     # my_generator.city_name = FUKUOKA_SHI  # local worldpop TIFF for Fukuoka sub-wards
-    my_generator.city_name = LIVERPOOL  # local worldpop TIFF for liverpool
+    # my_generator.city_name = LIVERPOOL  # local worldpop TIFF for liverpool
+    my_generator.city_name = PARIS  # local worldpop TIFF for liverpool
 
     # 2. set satellite token
     my_generator.set_satetoken("xxxxxxxxxxxxxxx")  # ArcGIS World_Imagery token
 
     # 3. load area shapefile
     # For Liverpool (original example):
-    area = gpd.read_file(LIVERPOOL_SHP)
+    # area = gpd.read_file(LIVERPOOL_SHP)
+    area = gpd.read_file(PARIS_SHP)
     # area = gpd.read_file(FUKUOKA_SHP)
     # For Fukuoka, use the shapefile you used in s1:
     # area = gpd.read_file(out_path)
@@ -58,7 +60,8 @@ if __name__ == "__main__":
         columns=my_generator.area.index
     )
     dt_str = str(datetime.datetime.now()).replace(" ", "_").replace(":", "")
-    od_df.to_csv(f"./outputs/od_matrix_liverpool_{dt_str}.csv")
+    od_df.to_csv(f"./outputs/od_matrix_paris_{dt_str}.csv")
+    # od_df.to_csv(f"./outputs/od_matrix_liverpool_{dt_str}.csv")
     # od_df.to_csv(f"./outputs/od_matrix_fukuoka_{dt_str}.csv")
 
     # 5. plot and show the arc chart
