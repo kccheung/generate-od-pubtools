@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 
-from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT, FUKUOKA_SHI, LIVERPOOL, MAPPING
+from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT, FUKUOKA_SHI, LIVERPOOL, MAPPING, PARIS
 from utils import build_fukuoka_features_from_csv
 
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
@@ -171,7 +171,7 @@ class Generator:
 
         # No cache
         # --- choose method based on city_name ---
-        if getattr(self, "city_name", None) in [FUKUOKA_SHI, LIVERPOOL]:
+        if getattr(self, "city_name", None) in [FUKUOKA_SHI, LIVERPOOL, PARIS]:
             # use local WorldPop TIFF instead of ArcGIS ImageServer
             print(" **Fetching pop features from WorldPop (local TIFF)...")
             tif_path = MAPPING[self.city_name]
