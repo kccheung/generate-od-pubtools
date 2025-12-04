@@ -3,9 +3,9 @@
 # FUKUOKA_SHP = "./assets/fukuoka_wards_n03b.shp"  # 950 sub-wards
 FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431.shp"  # 431-cell grid from 950 sub-wards
 CACHE_PATH = "./assets/regional_images_fukuoka_city.pkl"
-JPN_TIF_PATH = "./assets/jpn_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73951
-GBR_TIF_PATH = "./assets/gbr_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=49113
-FRA_TIF_PATH = "./assets/fra_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73407
+JPN_TIF_PATH = "./assets/worldpop/jpn_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73951
+GBR_TIF_PATH = "./assets/worldpop/gbr_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=49113
+FRA_TIF_PATH = "./assets/worldpop/fra_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73407
 
 # OD_PATH_LIVERPOOL = "./outputs/od_matrix_liverpool_2025-12-03_174537.224411.csv"
 OD_PATH_LIVERPOOL = "./outputs/od_liverpool_imageexport/od_matrix_liverpool_2025-12-02_203358.822592.csv"
