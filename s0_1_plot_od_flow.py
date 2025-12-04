@@ -1,16 +1,19 @@
 # s0_1_plot_od_flow.py
 
+import os
 import argparse
 import pandas as pd
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
-from constants import OD_PATH, FUKUOKA_SHP, LIVERPOOL_SHP  # same as in s1_sate_img_process.py
+from constants import OD_PATH, FUKUOKA_SHP, LIVERPOOL_SHP, OD_PATH_LIVERPOOL  # same as in s1_sate_img_process.py
 from generate_od.utils import plot_od_arc_chart
 from utils import od_sanity_print, plot_od_topk_gradient
 
-
+od_path = OD_PATH
+# od_path = OD_PATH_LIVERPOOL
+# od_path = "./assets/example_data/CommutingOD/GB_Liverpool/generation.npy"
 # SHP_PATH = LIVERPOOL_SHP
 SHP_PATH = FUKUOKA_SHP
 # liverpool od quantiles
@@ -26,7 +29,7 @@ def main():
         "--od_csv",
         type=str,
         # required=True,
-        default=OD_PATH,
+        default=od_path,
         help="Path to OD matrix CSV file (square matrix, no header).",
     )
     parser.add_argument(
@@ -59,9 +62,22 @@ def main():
     # 1. Load OD matrix
     print(f"Loading OD matrix from {args.od_csv} ...")
 
-    # <-- NEW: read with header + index, then drop them
-    df = pd.read_csv(args.od_csv, header=0, index_col=0)
-    od = df.to_numpy(dtype=float)
+    # <-- NEW: read with header + index, then drop them; support .npy arrays
+    ext = os.path.splitext(args.od_csv)[1].lower()
+    if ext == ".npy":
+        arr = np.load(args.od_csv, allow_pickle=False)
+        if isinstance(arr, np.ndarray) and arr.ndim == 2:
+            od = arr.astype(float)
+        else:
+            # try to coerce to 2D via pandas if possible (e.g., saved DataFrame values)
+            try:
+                df = pd.DataFrame(arr)
+                od = df.to_numpy(dtype=float)
+            except Exception:
+                raise ValueError(f"Unsupported .npy contents in {args.od_csv}")
+    else:
+        df = pd.read_csv(args.od_csv, header=0, index_col=0)
+        od = df.to_numpy(dtype=float)
     print("OD shape (after dropping labels):", od.shape)
     od_sanity_print(od)
 
@@ -91,7 +107,7 @@ def main():
     #     low=q_low,
     #     high=q_high,
     # )
-    fig = plot_od_topk_gradient(od, gdf, k=100, cmap_name="Reds")
+    fig = plot_od_topk_gradient(od, gdf, k=1000, cmap_name="Reds")
     # fig.savefig("od_fukuoka_top1000_blues.png", bbox_inches="tight", dpi=200)
 
     if args.output:

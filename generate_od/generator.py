@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 
-from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT
+from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT, FUKUOKA_SHI, LIVERPOOL, MAPPING
 from utils import build_fukuoka_features_from_csv
 
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
@@ -171,10 +171,10 @@ class Generator:
 
         # No cache
         # --- choose method based on city_name ---
-        if getattr(self, "city_name", None) == "Fukuoka_shi":
+        if getattr(self, "city_name", None) in [FUKUOKA_SHI, LIVERPOOL]:
             # use local WorldPop TIFF instead of ArcGIS ImageServer
             print(" **Fetching pop features from WorldPop (local TIFF)...")
-            tif_path = JPN_TIF_PATH
+            tif_path = MAPPING[self.city_name]
             worldpop_feats = worldpop_from_local_tif(area_shp, tif_path)
         else:
             # → fetch from WorldPop as before
@@ -227,13 +227,14 @@ class Generator:
         img_feats = extract_imgfeats_RemoteCLIP(self.vision_model, self.model_name, imgs, self.config["device"])
 
         # -– Calibrate grid area to match official 343.39 km²
+        raw_pop_total = worldpop[:, 0].sum()
+        raw_area_total = worldpop[:, 1].sum()
         # For OD modelling, mainly care about relative density and using population/area as features
         # 	keep the shapes,
         # 	rescale area so that the total matches official stats, just like we did with population.
-        if getattr(self, "city_name", None) == "Fukuoka_shi":
-            raw_pop_total = worldpop[:, 0].sum()
-            raw_area_total = worldpop[:, 1].sum()
-
+        if getattr(self, "city_name", None) in [FUKUOKA_SHI,
+                                                # LIVERPOOL  # TODO: add Liverpool calibration if needed
+                                                ]:
             target_pop_total = FUKUOKA_CITY_FEAT["pop_total"]  # or from census / Hub
             target_area_total = FUKUOKA_CITY_FEAT["area_km2"]  # km²
 
@@ -247,6 +248,11 @@ class Generator:
                 f"[Fukuoka calibration]\n"
                 f"raw_pop={raw_pop_total:.1f}, raw_area={raw_area_total:.2f} ->\n"
                 f"scaled_pop={worldpop[:, 0].sum():.1f}, scaled_area={worldpop[:, 1].sum():.2f}"
+            )
+        else:
+            print(
+                f"[Feature check]\n"
+                f"raw_pop={raw_pop_total:.1f}, raw_area={raw_area_total:.2f}"
             )
         nfeat = np.concatenate([img_feats, np.log1p(worldpop)], axis=1)
 
