@@ -226,7 +226,6 @@ class Generator:
         imgs = self._fetch_sateimgs(self.area)
         img_feats = extract_imgfeats_RemoteCLIP(self.vision_model, self.model_name, imgs, self.config["device"])
 
-        # -– Calibrate grid area to match official 343.39 km²
         raw_pop_total = worldpop[:, 0].sum()
         raw_area_total = worldpop[:, 1].sum()
         # For OD modelling, mainly care about relative density and using population/area as features
@@ -235,6 +234,7 @@ class Generator:
         if getattr(self, "city_name", None) in [FUKUOKA_SHI,
                                                 # LIVERPOOL  # TODO: add Liverpool calibration if needed
                                                 ]:
+            # -- Fukuoka: Calibrate grid area to match official 343.39 km²
             target_pop_total = FUKUOKA_CITY_FEAT["pop_total"]  # or from census / Hub
             target_area_total = FUKUOKA_CITY_FEAT["area_km2"]  # km²
 
@@ -302,7 +302,7 @@ class Generator:
             net, masks, distance, batchlization = c
             n, e = net
 
-            # generate OD matrix
+            # generate OD matrix, og implementation
             # e_hats = []
             # for _ in tqdm(range(sample_times), desc=" **Generating OD matrix"):
             #     net_hat = self.od_model.DDIM_sample_loop(n.shape, e.shape, c)
@@ -312,6 +312,16 @@ class Generator:
 
             # change to online mean to reduce memory usage, as my Macbook has limited RAM
             e_hat_mean = None
+
+            # choose autocast context
+            if self.config["device"].type == "cuda":
+                ctx = torch.cuda.amp.autocast
+                ctx_kwargs = {"device_type": "cuda", "dtype": torch.float16}
+            else:
+                from contextlib import nullcontext
+                ctx = nullcontext
+                ctx_kwargs = {}
+
             for k in tqdm(range(sample_times), desc=" **Generating OD matrix"):
                 net_hat = self.od_model.DDIM_sample_loop(n.shape, e.shape, c)
                 _, e_hat = net_hat

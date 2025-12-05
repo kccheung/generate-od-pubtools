@@ -11,14 +11,14 @@ from constants import OD_PATH, FUKUOKA_SHP, LIVERPOOL_SHP, OD_PATH_LIVERPOOL  # 
 from generate_od.utils import plot_od_arc_chart
 from utils import od_sanity_print, plot_od_topk_gradient
 
-od_path = OD_PATH
+# od_path = OD_PATH
 # od_path = OD_PATH_LIVERPOOL
-# od_path = "./assets/example_data/CommutingOD/GB_Liverpool/generation.npy"
-# SHP_PATH = LIVERPOOL_SHP
-SHP_PATH = FUKUOKA_SHP
+od_path = "./assets/example_data/CommutingOD/GB_Liverpool/generation.npy"
+SHP_PATH = LIVERPOOL_SHP
+# SHP_PATH = FUKUOKA_SHP
 # liverpool od quantiles
-LOW = 133
-HIGH = 217
+# LOW = 133
+# HIGH = 217
 
 
 def main():
@@ -108,7 +108,7 @@ def main():
     #     high=q_high,
     # )
     fig = plot_od_topk_gradient(od, gdf,
-                                k=0.1,  # fraction of top flows
+                                k=0.9,  # fraction of top flows
                                 # k=100,
                                 cmap_name="Reds")
     # fig.savefig("od_fukuoka_top1000_blues.png", bbox_inches="tight", dpi=200)

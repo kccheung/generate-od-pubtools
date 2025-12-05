@@ -1,14 +1,19 @@
+> Note: For my UCL MSc coursework, I (David Cheung) added custom scripts and notes in `docs/README_cw2.md`. These are not part of the official GlODGen project.
+
 # GlODGen: Generate Origin-destination Matrix based-on Public Available Information on the Internet
-The following code can be used to automatically obtain **Population Count** (from [**WorldPop**](https://hub-worldpop.opendata.arcgis.com/)) and **Satellite Imagery** (for [**Esri World Imagery**](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9)) for a given area divided by several regions. Based on this information, it can generate the origin-destination (OD) matrix between regions using a graph denoising diffusion model.
+
+The following code can be used to automatically obtain **Population Count** (from [**WorldPop**](https://hub-worldpop.opendata.arcgis.com/)) and **Satellite Imagery** (for [**Esri World Imagery**](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9)) for a given area divided by
+several regions. Based on this information, it can generate the origin-destination (OD) matrix between regions using a graph denoising diffusion model.
 
 ### Related Publication
+
 - This is the offical repository of implementation of the paper published on NeurIPS 2025, *Satellites Reveal Mobility: A Commuting Origin-destination Flow Generator for Global Cities* ([ArXiv](https://arxiv.org/abs/2505.15870)).
 - The model and dataset are closely related to a online OD flow generation demo at [https://fi.ee.tsinghua.edu.cn/worldod/].
 - The generation pipeline is closely related to a generated commuting OD flow dataset for cities around the world at [Paper on ArXiv](https://arxiv.org/abs/2505.17111).
 
 ### Framework
-![Framework](assets/framework.png)
 
+![Framework](assets/framework.png)
 
 ### Code Description
 
@@ -25,7 +30,7 @@ generate_od/
 
 #### Commuting OD Flow Generation (MAIN)
 
-First install the packacge by 
+First install the packacge by
 
     pip install generate-od
 
@@ -36,9 +41,8 @@ import geopandas as gpd
 from generate_od import generator
 
 if __name__ == "__main__":
-
     my_generator = generator.Generator()
-    my_generator.set_satetoken("xxxxxxxxxxxxxxx") # for World_Imagery, applied from ArcGIS
+    my_generator.set_satetoken("xxxxxxxxxxxxxxx")  # for World_Imagery, applied from ArcGIS
 
     area = gpd.read_file("London.shp")
     my_generator.load_area(area)
@@ -69,8 +73,9 @@ print(f"Features: [population_count, area_km2]")
 ```
 
 The `worldpop()` function automatically:
+
 - Downloads population raster data from WorldPop ArcGIS services
-- Masks the raster with your regional boundaries  
+- Masks the raster with your regional boundaries
 - Aggregates pixel values within each region
 - Calculates region areas in square kilometers
 - Returns a numpy array with population and area features for each region
@@ -117,16 +122,16 @@ print(f"Features per region: {img_features.shape[1]} dimensions")
 ```
 
 The satellite image processing pipeline:
+
 - Downloads high-resolution satellite tiles from Esri's World Imagery service
 - Concatenates tiles to create regional composite images
 - Applies region boundaries as masks to extract relevant areas
 - Extracts 1024-dimensional visual features using RemoteCLIP
 - Returns features that capture urban morphology, land use, and built environment
 
-
 ### Citation
-Coming soon...
 
+Coming soon...
 
 ### Contact
 
