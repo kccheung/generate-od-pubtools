@@ -77,10 +77,7 @@ def _fetch_worldpop(self, area_shp: gpd.GeoDataFrame):
     # ...
 ```
 
-where `worldpop_from_local_tif(...)` samples the local GBR 2025 WorldPop TIFF and computes for each region:
-
-    •	estimated total population;
-    •	area in km² (based on pixel coverage).
+where `worldpop_from_local_tif(...)` samples the local GBR 2025 WorldPop TIFF and computes for each region's estimated total population and area in km² (based on pixel coverage).
 
 For Liverpool no extra calibration is currently applied (I only calibrate Fukuoka to Japanese census totals). For Liverpool I only print a sanity check:
 
@@ -201,10 +198,7 @@ The original repo includes a reference OD matrix:
 - File: assets/example_data/CommutingOD/GB_Liverpool/generation.npy
 - Shape: (252, 252)
 
-My generated OD is saved as a CSV, e.g., `./outputs/od_liverpool_YYYY-MM-DD_HHMMSS.csv`
-
-I load both and compute metrics as in `s3_compare_metrics.py`.
-For metrics, I used:
+I fix and record a random seed for each run, and ran a total of 10 independent runs with different seeds and compute below metrics vs the baseline.
 
 ```python
 # ./utils.py
@@ -226,18 +220,46 @@ def cpc(F, F_hat):
 # ...
 ```
 
-On my final run (after scaling):
+On my final average result (after scaling):
 
-| Metrics               | Value                                         | Interpretation                                                                                   |
+| Metrics               | Average over 10 runs                          | Interpretation                                                                                   |
 |-----------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Reference total flows | 4,883,625                                     |                                                                                                  |
 | Scaled total flows    | 4,883,625 (matches reference by construction) |                                                                                                  |
-| RMSE (scaled)         | ≈ 70.99                                       | commuters per OD pair (on average).                                                              |
-| NRMSE (scaled)        | ≈ 0.97                                        | typical error is on the order of the natural variation of true flows.                            |
-| CPC (scaled)          | ≈ 0.71                                        | about 71% of total commuting volume is overlapping; remaining 29% is redistributed across cells. |
+| RMSE (scaled)         | ≈ 72.88                                       | commuters per OD pair (on average).                                                              |
+| NRMSE (scaled)        | ≈ 0.99                                        | typical error is on the order of the natural variation of true flows.                            |
+| CPC (scaled)          | ≈ 0.70                                        | about 70% of total commuting volume is overlapping; remaining 30% is redistributed across cells. |
+
+```
+=== 10 runs summary over seeds ===
+   scaled_total       rmse     nrmse       cpc  seed
+0     4883625.0  70.289939  0.958267  0.714789     0
+1     4883625.0  73.514408  1.002226  0.706290     1
+2     4883625.0  74.798215  1.019729  0.704687     2
+3     4883625.0  73.048566  0.995876  0.702048     3
+4     4883625.0  69.508009  0.947607  0.716466     4
+5     4883625.0  75.036621  1.022979  0.696702     5
+6     4883625.0  72.616525  0.989986  0.701730     6
+7     4883625.0  73.806909  1.006214  0.699382     7
+8     4883625.0  73.739475  1.005295  0.701381     8
+9     4883625.0  72.449223  0.987705  0.704959     9
+
+Mean ± std:
+           rmse     nrmse       cpc
+mean  72.880789  0.993588  0.704844
+std    1.785529  0.024342  0.006340
+```
 
 Given the stochastic nature of diffusion sampling and likely version differences between the authors’ internal code and the public Python package, I interpret this as statistical reproduction, not bitwise equality.
 Additionally, according to the authors: 
 1. ESRI imagery (which is integrated in GlODGen) updates over time as the built environment evolves, so embeddings may also change over time.
 2. Due to reviewer deadlines at the time, they did not lock the random seed when generating the sample dataset, so exact replication of sample matrices is not possible.
 ⸻
+
+## 5. Lessons and limitations (Liverpool)
+- GlODGen / WeDAN trained on US commuting data can still generate plausible OD patterns for Liverpool when conditioned on satellite imagery and population.
+- Exact cell-by-cell reproduction of the reference matrix is not realistic:
+  - diffusion sampling is stochastic;
+  - training, package versions and source of population datasets may differ.
+- Metrics like CPC and NRMSE provide a meaningful way to judge reproduction quality.
+- For my coursework, I treat the Liverpool reproduction as successful in a statistical sense and then use the same pipeline for the unseen Fukuoka case study.

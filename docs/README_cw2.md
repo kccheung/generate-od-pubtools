@@ -30,22 +30,22 @@ My concrete objectives:
 
 1. **Liverpool baseline reproduction**
 
-   - Use the public `generate-od` Python package to regenerate the **GB_Liverpool** OD matrix.
-   - Compare against the reference OD file provided in the repo using:
-     - RMSE, NRMSE, CPC (Common Part of Commuting),
-     - simple visualisations (heatmaps, top-k flows).
+    - Use the public `generate-od` Python package to regenerate the **GB_Liverpool** OD matrix.
+    - Compare against the reference OD file provided in the repo using:
+        - RMSE, NRMSE, CPC (Common Part of Commuting),
+        - simple visualisations (heatmaps, top-k flows).
 
 2. **Fukuoka-shi case study**
 
-   - Construct a **431-cell grid** for Fukuoka-shi from government open source data.
-   - Calibrate population and area features using Japanese stats.
-   - Run GlODGen / WeDAN to generate a Fukuoka commuting OD matrix.
-   - Interpret the pattern in terms of SDGs (e.g. SDG 11 Sustainable Cities, SDG 10 Inequalities).
+    - Construct a 431-cell grid for Fukuoka-shi from government open source data: [国土数値情報ダウンロードサイト](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2025.html).
+    - Calibrate population and area features using Japanese stats.
+    - Run GlODGen / WeDAN to generate a Fukuoka commuting OD matrix.
+    - Interpret the pattern in terms of SDGs (e.g. SDG 11 Sustainable Cities, SDG 10 Inequalities).
 
 3. **Critical reflection**
 
-   - Discuss **reproducibility limits** (stochastic diffusion, version drift).
-   - Analyse **contextual transfer**: what works / fails when applying a US-trained model to a Japanese city.
+    - Discuss **reproducibility limits** (stochastic diffusion, version drift).
+    - Analyse **contextual transfer**: what works / fails when applying a US-trained model to a Japanese city.
 
 ---
 

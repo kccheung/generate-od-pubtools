@@ -24,13 +24,13 @@ def main():
     # union to get whole Fukuoka city shape
     city_union = gdf_m.unary_union
     total_area_m2 = city_union.area
-    print(f"Total area (m^2): {total_area_m2:.2f}")
+    print(f"Total area (km^2): {total_area_m2 / 1e6:.2f}")
 
     # 3. Decide grid cell size from target zone count
     #    cell_area ≈ total_area / TARGET_ZONES → cell_size = sqrt(area)
     cell_area_m2 = total_area_m2 / TARGET_ZONES
     cell_size = cell_area_m2 ** 0.5
-    print(f"Target cell size (m): {cell_size:.2f}")
+    print(f"Target cell length (km): {cell_size / 1e3:.2f}")
 
     minx, miny, maxx, maxy = city_union.bounds
     xs = np.arange(minx, maxx, cell_size)
