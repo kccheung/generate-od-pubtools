@@ -232,8 +232,8 @@ On my final run (after scaling):
 |-----------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Reference total flows | 4,883,625                                     |                                                                                                  |
 | Scaled total flows    | 4,883,625 (matches reference by construction) |                                                                                                  |
-| RMSE (scaled)         | ≈ 74.6                                        | commuters per OD pair (on average).                                                              |
-| NRMSE (scaled)        | ≈ 1.02                                        | typical error is on the order of the natural variation of true flows.                            |
+| RMSE (scaled)         | ≈ 70.99                                       | commuters per OD pair (on average).                                                              |
+| NRMSE (scaled)        | ≈ 0.97                                        | typical error is on the order of the natural variation of true flows.                            |
 | CPC (scaled)          | ≈ 0.71                                        | about 71% of total commuting volume is overlapping; remaining 29% is redistributed across cells. |
 
 Given the stochastic nature of diffusion sampling and likely version differences between the authors’ internal code and the public Python package, I interpret this as statistical reproduction, not bitwise equality.

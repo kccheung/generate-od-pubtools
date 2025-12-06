@@ -1,6 +1,9 @@
 # in utils.py (or wherever you keep it)
 from io import BytesIO
 
+import random
+import numpy as np
+import torch
 import contextily as cx
 import geopandas as gpd
 import matplotlib.cm as cm
@@ -14,6 +17,18 @@ from matplotlib.collections import LineCollection
 from shapely.geometry import LineString
 
 from constants import FUKUOKA_WARD_STATS
+
+
+def set_all_seeds(seed: int):
+    print(f"\n=== Using seed {seed} ===")
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    if torch.backends.mps.is_available():
+        # MPS is less deterministic, but still set it
+        torch.manual_seed(seed)
 
 
 def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
@@ -121,13 +136,13 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
 
 def rmse(F, F_hat):
     diff = F - F_hat
-    return np.sqrt(np.mean(diff**2))
+    return np.sqrt(np.mean(diff ** 2))
 
 
 def nrmse(F, F_hat):
     # as in their dataset paper: normalize by variance around mean of true F
     F_mean = F.mean()
-    denom = np.sqrt(np.mean((F - F_mean)**2))
+    denom = np.sqrt(np.mean((F - F_mean) ** 2))
     return rmse(F, F_hat) / denom
 
 
@@ -136,6 +151,36 @@ def cpc(F, F_hat):
     numerator = 2 * np.sum(np.minimum(F, F_hat))
     denominator = np.sum(F) + np.sum(F_hat)
     return numerator / denominator
+
+
+def compute_od_metrics(od_hat: np.ndarray, baseline: np.ndarray):
+    """
+    Compare generated OD with Liverpool baseline.
+    Returns dict with scaled_total, rmse, nrmse, cpc.
+    """
+    assert od_hat.shape == baseline.shape
+
+    # Work in float, keep original 2D shape
+    F = baseline.astype(float)
+    F_hat = od_hat.astype(float)
+
+    # Scale F_hat so that total commuters matches baseline total
+    total_F = F.sum()
+    total_F_hat = F_hat.sum()
+    scale = total_F / total_F_hat if total_F_hat > 0 else 1.0
+    F_hat_scaled = F_hat * scale
+
+    # Use the helper functions defined above so formulas are identical
+    rmse_val = rmse(F, F_hat_scaled)
+    nrmse_val = nrmse(F, F_hat_scaled)
+    cpc_val = cpc(F, F_hat_scaled)
+
+    return {
+        "scaled_total": F_hat_scaled.sum(),
+        "rmse": rmse_val,
+        "nrmse": nrmse_val,
+        "cpc": cpc_val,
+    }
 
 
 def load_fukuoka_ward_population_from_csv(csv_path: str) -> dict:

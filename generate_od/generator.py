@@ -173,7 +173,7 @@ class Generator:
         # --- choose method based on city_name ---
         if getattr(self, "city_name", None) in [FUKUOKA_SHI, LIVERPOOL, PARIS]:
             # use local WorldPop TIFF instead of ArcGIS ImageServer
-            print(" **Fetching pop features from WorldPop (local TIFF)...")
+            print(" **Fetching pop features from WorldPop (local TIF)...")
             tif_path = MAPPING[self.city_name]
             worldpop_feats = worldpop_from_local_tif(area_shp, tif_path)
         else:

@@ -52,3 +52,10 @@ RMSE (scaled): 74.44036127764443
 NRMSE (scaled): 1.0148501107190633
 CPC (scaled): 0.7028729071411474
 """
+"""
+vs. od_liverpool_imageexport/od_matrix_liverpool_2025-12-06_135455.481068.csv
+Scaled total flows: 4883625.0
+RMSE (scaled): 70.98601893429779
+NRMSE (scaled): 0.9677568450572845
+CPC (scaled): 0.7120679802093081
+"""
