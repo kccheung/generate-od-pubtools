@@ -151,7 +151,7 @@ Final OD generation is done by `Generator.generate`:
 # ./s2_generate_odf.py
 # ...
 od_hat = my_generator.generate(sample_times=50)
-# 50 as suggested in the original paper and is the number of independent diffusion samples to average
+# 50 as suggested in the original paper and is the number of independent diffusion samples to average, I will do a mini grid search on this and apply to Fukuoka's case.
 # ...
 ```
 
@@ -220,6 +220,13 @@ def cpc(F, F_hat):
 # ...
 ```
 
+Hardware configuration of my experiments, a `ml.g5.xlarge` Amazon SageMaker instance:
+
+- GPU: 1x NVIDIA A10G Tensor Core GPU
+- vCPUs: 4
+- Memory (System RAM): 16 GiB
+- GPU Memory: 24 GiB
+
 On my final average result (after scaling):
 
 | Metrics               | Average over 10 runs                          | Interpretation                                                                                   |
@@ -231,7 +238,43 @@ On my final average result (after scaling):
 | CPC (scaled)          | ≈ 0.70                                        | about 70% of total commuting volume is overlapping; remaining 30% is redistributed across cells. |
 
 ```
-=== 10 runs summary over seeds ===
+=== Monte Carlo summary over seeds with sample_times=5 ===
+   scaled_total       rmse     nrmse       cpc  seed  runtime_sec
+0     4883625.0  87.173104  1.188436  0.656689     0    49.209608
+1     4883625.0  89.344069  1.218033  0.650238     1    32.423601
+2     4883625.0  87.712769  1.195794  0.654828     2    32.412090
+3     4883625.0  88.345771  1.204423  0.647944     3    32.448625
+4     4883625.0  84.793277  1.155992  0.660713     4    32.455435
+5     4883625.0  91.529790  1.247831  0.639025     5    32.426053
+6     4883625.0  88.538677  1.207053  0.647414     6    32.461584
+7     4883625.0  89.566385  1.221064  0.644793     7    32.433465
+8     4883625.0  88.107750  1.201178  0.651397     8    32.447944
+9     4883625.0  87.535977  1.193383  0.651998     9    32.454935
+
+Mean ± std:
+           rmse     nrmse       cpc  runtime_sec
+mean  88.264757  1.203319  0.650504    34.117334
+std    1.754503  0.023919  0.006189     5.302909
+
+=== Monte Carlo summary over seeds with sample_times=10 ===
+   scaled_total       rmse     nrmse       cpc  seed  runtime_sec
+0     4883625.0  78.345419  1.068088  0.686203     0    60.379097
+1     4883625.0  82.202807  1.120676  0.677698     1    60.212624
+2     4883625.0  80.426556  1.096460  0.680046     2    60.236391
+3     4883625.0  80.079077  1.091723  0.676342     3    60.891734
+4     4883625.0  76.839215  1.047554  0.688017     4    60.352933
+5     4883625.0  82.508839  1.124848  0.668334     5    60.242999
+6     4883625.0  80.337051  1.095240  0.674798     6    60.422156
+7     4883625.0  81.428088  1.110114  0.671728     7    60.246161
+8     4883625.0  80.209563  1.093502  0.677662     8    60.245504
+9     4883625.0  79.035173  1.077491  0.680731     9    60.318004
+
+Mean ± std:
+           rmse     nrmse       cpc  runtime_sec
+mean  80.141179  1.092570  0.678156    60.354760
+std    1.731780  0.023609  0.006009     0.201457
+
+=== Monte Carlo summary over seeds with sample_times=50 ===
    scaled_total       rmse     nrmse       cpc  seed
 0     4883625.0  70.289939  0.958267  0.714789     0
 1     4883625.0  73.514408  1.002226  0.706290     1
@@ -251,15 +294,16 @@ std    1.785529  0.024342  0.006340
 ```
 
 Given the stochastic nature of diffusion sampling and likely version differences between the authors’ internal code and the public Python package, I interpret this as statistical reproduction, not bitwise equality.
-Additionally, according to the authors: 
-1. ESRI imagery (which is integrated in GlODGen) updates over time as the built environment evolves, so embeddings may also change over time.
-2. Due to reviewer deadlines at the time, they did not lock the random seed when generating the sample dataset, so exact replication of sample matrices is not possible.
-⸻
+Additionally, according to the authors:
 
-## 5. Lessons and limitations (Liverpool)
+1. ESRI imagery (which is integrated in GlODGen) updates over time as the built environment evolves, so embeddings may also change over time, that means the embeddings used in the original paper may differ from those extracted now.
+2. Due to reviewer deadlines at the time, they did not lock the random seed when generating the sample dataset, so exact replication of sample matrices is not possible.
+
+## 4. Lessons and limitations (Liverpool)
+
 - GlODGen / WeDAN trained on US commuting data can still generate plausible OD patterns for Liverpool when conditioned on satellite imagery and population.
 - Exact cell-by-cell reproduction of the reference matrix is not realistic:
-  - diffusion sampling is stochastic;
-  - training, package versions and source of population datasets may differ.
+    - diffusion sampling is stochastic;
+    - training, package versions and source of population datasets may differ.
 - Metrics like CPC and NRMSE provide a meaningful way to judge reproduction quality.
 - For my coursework, I treat the Liverpool reproduction as successful in a statistical sense and then use the same pipeline for the unseen Fukuoka case study.

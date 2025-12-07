@@ -1,4 +1,4 @@
-> Note: For my UCL MSc coursework, I (David Cheung) added custom scripts and notes in `docs/README_cw2.md`. These are not part of the official GlODGen project.
+> Note: For my UCL MSc coursework, I (David Cheung) added custom scripts and notes in [README_cw2](docs/README_cw2.md). These are not part of the official GlODGen project.
 
 # GlODGen: Generate Origin-destination Matrix based-on Public Available Information on the Internet
 
