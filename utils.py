@@ -1,4 +1,5 @@
 # in utils.py (or wherever you keep it)
+import os
 from io import BytesIO
 
 import random
@@ -29,6 +30,30 @@ def set_all_seeds(seed: int):
     if torch.backends.mps.is_available():
         # MPS is less deterministic, but still set it
         torch.manual_seed(seed)
+
+
+def load_od_from(od_path: str) -> np.ndarray:
+    """
+    Load OD matrix CSV file.
+    Assumes square matrix with no header or index column.
+    Read with header + index, then drop them; support .npy arrays
+    """
+    ext = os.path.splitext(od_path)[1].lower()
+    if ext == ".npy":  # repo .npy format
+        arr = np.load(od_path, allow_pickle=False)
+        if isinstance(arr, np.ndarray) and arr.ndim == 2:
+            od = arr.astype(float)
+        else:
+            # try to coerce to 2D via pandas if possible (e.g., saved DataFrame values)
+            try:
+                df = pd.DataFrame(arr)
+                od = df.to_numpy(dtype=float)
+            except Exception:
+                raise ValueError(f"Unsupported .npy contents in {od_path}")
+    else:  # my stored CSV format
+        df = pd.read_csv(od_path, header=0, index_col=0)
+        od = df.to_numpy(dtype=float)
+    return od
 
 
 def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
@@ -101,7 +126,7 @@ def plot_od_topk_gradient(od, geometries, k=1000, cmap_name="Blues"):
         cmap=cmap,
         norm=norm,
         linewidths=widths,
-        alpha=0.8,
+        alpha=0.1,
     )
 
     # 7. plot
@@ -207,30 +232,93 @@ def load_fukuoka_ward_population_from_csv(csv_path: str) -> dict:
     return ward_totals
 
 
-def build_fukuoka_features_from_csv(area_gdf: gpd.GeoDataFrame,
-                                    csv_path: str,
-                                    ward_col: str = "N03_005"):
+def build_fukuoka_features_from_csv(
+        area_gdf: gpd.GeoDataFrame,
+        csv_path: str,
+        ward_col: str = "N03_005",
+) -> np.ndarray:
     """
-    Given a ward-level GeoDataFrame (N03),
-    and the Fukuoka ward population CSV,
-    return a (N, 2) array: [population_count, area_km2] per ward.
+    Build [population, area_km2] features for each grid cell in `area_gdf`
+    using Fukuoka City's ward-level registered population CSV.
+
+    Assumes:
+      - `area_gdf` is a grid over Fukuoka-shi (e.g. fukuoka_shi_grid_300.shp),
+      - it has a column `ward_col` (default "N03_005") with ward names like "東区", "博多区", ...,
+      - `csv_path` points to the ward-level population CSV previously used.
+
+    For each ward:
+      - total ward population is read from the CSV (Japanese + foreign residents),
+      - that population is distributed *equally* across all grid cells whose
+        `ward_col` matches that ward,
+      - each cell's area_km2 is computed from its polygon geometry.
+
+    Returns
+    -------
+    features : np.ndarray, shape (N, 2)
+        Column 0: population per cell
+        Column 1: area_km2 per cell
     """
+    if ward_col not in area_gdf.columns:
+        raise KeyError(f"Column '{ward_col}' not found in area_gdf; "
+                       "cannot map grid cells to ward-level population.")
+
+    # 1. Load ward-level total populations from CSV
     ward_pops = load_fukuoka_ward_population_from_csv(csv_path)
+    if not ward_pops:
+        raise ValueError("No ward populations loaded from CSV; "
+                         "check csv_path and CSV format.")
 
-    # compute area in km^2 from geometry
-    # (work in metric CRS, then convert to km^2)
+    # 2. Compute each cell's area in km^2 using a metric CRS
     area_metric = area_gdf.to_crs(epsg=3857).copy()
-    # area_km2 = area_metric.geometry.area.values / 1e6
+    cell_area_km2 = area_metric.geometry.area.values / 1e6  # m^2 -> km^2
 
-    pops = []
-    for idx, row in area_gdf.iterrows():
-        ward_name = row[ward_col]  # e.g. '東区'
-        if ward_name not in ward_pops:
-            raise KeyError(f"Ward '{ward_name}' not found in CSV-derived ward_pops")
+    n = len(area_gdf)
+    features = np.zeros((n, 2), dtype=float)
 
-        pops.append([ward_pops[ward_name], FUKUOKA_WARD_STATS[ward_name]["area_km2"]])
+    # 3. Distribute each ward's population equally across its grid cells
+    ward_series = area_gdf[ward_col].astype(str)
+    ward_counts = ward_series.value_counts().to_dict()
 
-    return np.asarray(pops, dtype=float)
+    for i, ward_name in enumerate(ward_series):
+        # Population for this ward (0 if not found)
+        ward_pop_total = float(ward_pops.get(ward_name, 0.0))
+        count = ward_counts.get(ward_name, 0)
+
+        if count > 0 and ward_pop_total > 0:
+            per_cell_pop = ward_pop_total / count
+        else:
+            per_cell_pop = 0.0  # e.g. sea / outside wards / missing ward
+
+        features[i, 0] = per_cell_pop
+        features[i, 1] = cell_area_km2[i]
+
+    return features
+
+
+# def build_fukuoka_features_from_csv(area_gdf: gpd.GeoDataFrame,
+#                                     csv_path: str,
+#                                     ward_col: str = "N03_005"):
+#     """
+#     Given a ward-level GeoDataFrame (N03),
+#     and the Fukuoka ward population CSV,
+#     return a (N, 2) array: [population_count, area_km2] per ward.
+#     """
+#     ward_pops = load_fukuoka_ward_population_from_csv(csv_path)
+#
+#     # compute area in km^2 from geometry
+#     # (work in metric CRS, then convert to km^2)
+#     area_metric = area_gdf.to_crs(epsg=3857).copy()
+#     # area_km2 = area_metric.geometry.area.values / 1e6
+#
+#     pops = []
+#     for idx, row in area_gdf.iterrows():
+#         ward_name = row[ward_col]  # e.g. '東区'
+#         if ward_name not in ward_pops:
+#             raise KeyError(f"Ward '{ward_name}' not found in CSV-derived ward_pops")
+#
+#         pops.append([ward_pops[ward_name], FUKUOKA_WARD_STATS[ward_name]["area_km2"]])
+#
+#     return np.asarray(pops, dtype=float)
 
 
 def od_sanity_print(od_hat):

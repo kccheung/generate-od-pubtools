@@ -7,8 +7,9 @@ from shapely.geometry import box
 
 # ---- settings ----
 INPUT_SHP = "./assets/fukuoka_wards_n03b.shp"  # your 950-subward file
-OUTPUT_SHP = "./assets/fukuoka_shi_grid_300.shp"  # new coarse grid
+OUTPUT_SHP = "./assets/fukuoka_shi_grid_431_v3.shp"  # new coarse grid
 TARGET_ZONES = 300  # approx number of cells
+WARD_COL = "N03_005"  # ward name/code column in the input shapefile (e.g. 東区, 博多区, etc.)
 
 
 def main():
@@ -46,6 +47,35 @@ def main():
 
     grid_m = gpd.GeoDataFrame({"geometry": cells}, crs=gdf_m.crs)
     grid_m["zone_id"] = range(len(grid_m))
+
+    # 3b. Attach ward information to each grid cell via centroid-based spatial join
+    if WARD_COL in gdf_m.columns:
+        print(f"Attaching ward info using column '{WARD_COL}'...")
+        wards = gdf_m[[WARD_COL, "geometry"]].copy()
+        # use centroids of grid cells for a robust point-in-polygon join
+        grid_centroids = grid_m.copy()
+        grid_centroids["geometry"] = grid_m.geometry.centroid
+
+        joined = gpd.sjoin(
+            grid_centroids,
+            wards,
+            how="left",
+            predicate="within",  # centroid within ward polygon
+        )
+        # propagate ward label back to original grid_m
+        grid_m[WARD_COL] = joined[WARD_COL].values
+    else:
+        print(f"Warning: ward column '{WARD_COL}' not found in INPUT_SHP; ward info will not be saved.")
+
+    # cells with ward label
+    has_ward = grid_m[WARD_COL].notna()
+    print("Cells with ward:", has_ward.sum())
+    print("Cells without ward:", (~has_ward).sum())
+
+    # drop cells without ward assignment
+    grid_m = grid_m[has_ward].reset_index(drop=True)
+    grid_m["zone_id"] = range(len(grid_m))  # reassign IDs
+
     print(f"Number of grid cells created: {len(grid_m)}")
 
     # 4. Back to WGS84 for consistency with WorldPop / Esri code

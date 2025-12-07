@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 
-from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT, FUKUOKA_SHI, LIVERPOOL, MAPPING, PARIS
+from constants import FUKUOKA_POPULATION_CSV, JPN_TIF_PATH, FUKUOKA_CITY_FEAT, FUKUOKA_SHI, LIVERPOOL, MAPPING, PARIS, FUKUOKA
 from utils import build_fukuoka_features_from_csv
 
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = "1"
@@ -210,14 +210,14 @@ class Generator:
 
         # fetch worldpop
         # instead of: worldpop = self._fetch_worldpop(self.area)
-        if self.city_name == "Fukuoka":
+        if self.city_name == FUKUOKA:  # this is 7-ward level, NOT Fukuoka-shi
             # Use official CSV instead of WorldPop for Fukuoka wards
             worldpop = build_fukuoka_features_from_csv(
                 self.area,
                 csv_path=FUKUOKA_POPULATION_CSV,
                 ward_col="N03_005",  # adjust if your shapefile column differs
             )
-        else:
+        else:  # Fukuoka-shi or others
             print(" **Fetching pop features from WorldPop...")
             worldpop = self._fetch_worldpop(self.area)
 
