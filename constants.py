@@ -24,10 +24,10 @@ MAPPING = {
 }
 
 FUKUOKA_CITY_FEAT = {
-    "pop_total": 1_612_392,  # Fukuoka City 2025 census population
+    "pop_total": 1_620_574,  # Fukuoka City 2025 census population
     "area_km2": 343.39,  # Fukuoka City area in km²
 }
-FUKUOKA_POPULATION_CSV = "./assets/401307_population_touroku_population_202503.csv"
+FUKUOKA_POPULATION_CSV = "./assets/401307_population_touroku_population_202510.csv"
 
 LIVERPOOL_SHP = "./assets/example_data/shapefile/GB_Liverpool/regions.shp"
 PARIS_SHP = "./assets/example_data/shapefile/FR_Paris/Paris.shp"

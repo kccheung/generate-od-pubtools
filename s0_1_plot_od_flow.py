@@ -92,8 +92,7 @@ def main():
             f"Mismatch: OD has shape {od.shape} but geometries has {n_regions} features."
         )
 
-    # 3. Plot OD flows
-
+    # 2. Plot OD flows
     flows = od[od > 0].ravel()
     for q in [0.5, 0.75, 0.9, 0.95, 0.99]:
         print(q, np.quantile(flows, q))

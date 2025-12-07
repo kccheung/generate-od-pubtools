@@ -229,7 +229,7 @@ Hardware configuration of my experiments, a `ml.g5.xlarge` Amazon SageMaker inst
 
 On my final average result (after scaling):
 
-| Metrics               | Average over 10 runs                          | Interpretation                                                                                   |
+| Metrics               | sample_times=50, Average over 10 runs         | Interpretation                                                                                   |
 |-----------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Reference total flows | 4,883,625                                     |                                                                                                  |
 | Scaled total flows    | 4,883,625 (matches reference by construction) |                                                                                                  |
@@ -274,24 +274,67 @@ Mean ± std:
 mean  80.141179  1.092570  0.678156    60.354760
 std    1.731780  0.023609  0.006009     0.201457
 
-=== Monte Carlo summary over seeds with sample_times=50 ===
-   scaled_total       rmse     nrmse       cpc  seed
-0     4883625.0  70.289939  0.958267  0.714789     0
-1     4883625.0  73.514408  1.002226  0.706290     1
-2     4883625.0  74.798215  1.019729  0.704687     2
-3     4883625.0  73.048566  0.995876  0.702048     3
-4     4883625.0  69.508009  0.947607  0.716466     4
-5     4883625.0  75.036621  1.022979  0.696702     5
-6     4883625.0  72.616525  0.989986  0.701730     6
-7     4883625.0  73.806909  1.006214  0.699382     7
-8     4883625.0  73.739475  1.005295  0.701381     8
-9     4883625.0  72.449223  0.987705  0.704959     9
+=== Monte Carlo summary over seeds with sample_times=20 ===
+   scaled_total       rmse     nrmse       cpc  seed  runtime_sec
+0     4883625.0  73.323489  0.999624  0.704201     0   134.440769
+1     4883625.0  76.974535  1.049399  0.695534     1   115.929805
+2     4883625.0  77.049813  1.050425  0.695361     2   115.830444
+3     4883625.0  75.445045  1.028547  0.692607     3   115.858127
+4     4883625.0  72.130237  0.983356  0.705945     4   115.932457
+5     4883625.0  77.910180  1.062154  0.685794     5   115.927136
+6     4883625.0  75.782213  1.033144  0.690516     6   115.874653
+7     4883625.0  76.494299  1.042852  0.689212     7   115.850354
+8     4883625.0  76.266936  1.039752  0.692309     8   115.841597
+9     4883625.0  74.990847  1.022355  0.695200     9   115.881309
 
 Mean ± std:
-           rmse     nrmse       cpc
-mean  72.880789  0.993588  0.704844
-std    1.785529  0.024342  0.006340
+           rmse     nrmse       cpc  runtime_sec
+mean  75.636760  1.031161  0.694668   117.736665
+std    1.770415  0.024136  0.006282     5.869345
+Baseline run for 50 samples:
+
+=== Monte Carlo summary over seeds with sample_times=50 ===
+   scaled_total       rmse     nrmse       cpc  seed  runtime_sec
+0     4883625.0  70.289939  0.958267  0.714789     0   282.708400
+1     4883625.0  73.514408  1.002226  0.706290     1   282.688672
+2     4883625.0  74.798215  1.019729  0.704687     2   282.700849
+3     4883625.0  73.048566  0.995876  0.702048     3   282.677223
+4     4883625.0  69.508009  0.947607  0.716466     4   282.710561
+5     4883625.0  75.036621  1.022979  0.696702     5   282.763716
+6     4883625.0  72.616525  0.989986  0.701730     6   282.697139
+7     4883625.0  73.806909  1.006214  0.699382     7   282.681590
+8     4883625.0  73.739475  1.005295  0.701381     8   282.634035
+9     4883625.0  72.449223  0.987705  0.704959     9   282.781606
+
+Mean ± std:
+           rmse     nrmse       cpc  runtime_sec
+mean  72.880789  0.993588  0.704844   282.704379
+std    1.785529  0.024342  0.006340     0.042237
+
+=== Monte Carlo summary over seeds with sample_times=80 ===
+   scaled_total       rmse     nrmse       cpc  seed  runtime_sec
+0     4883625.0  69.741403  0.950789  0.716947     0   449.831061
+1     4883625.0  73.235962  0.998430  0.708501     1   449.291110
+2     4883625.0  73.833592  1.006578  0.707633     2   449.157859
+3     4883625.0  72.539514  0.988936  0.704487     3   449.288033
+4     4883625.0  68.761900  0.937435  0.719654     4   449.409036
+5     4883625.0  74.533126  1.016115  0.699362     5   449.668208
+6     4883625.0  72.029179  0.981978  0.704307     6   449.274938
+7     4883625.0  72.964287  0.994727  0.702567     7   449.350128
+8     4883625.0  73.363881  1.000174  0.703060     8   449.453625
+9     4883625.0  71.909604  0.980348  0.707382     9   449.454431
+
+Mean ± std:
+           rmse     nrmse       cpc  runtime_sec
+mean  72.291245  0.985551  0.707390   449.417843
+std    1.799223  0.024529  0.006389     0.200455
 ```
+
+I ran the GlODGen Liverpool pipeline 10 times with 10 different seeds and sample_times [5, 10, 20, 50, 80].
+After scaling the generated OD to match the baseline total flow, I obtained the best result of sample_times=50 as:
+RMSE = 72.881 ± 1.786, NRMSE = 0.994 ± 0.024, CPC = 0.705 ± 0.006 (mean ± std).
+
+And beyond 50 as I tested sample_times=80, the improvement is marginal compared to the increased computational cost.
 
 Given the stochastic nature of diffusion sampling and likely version differences between the authors’ internal code and the public Python package, I interpret this as statistical reproduction, not bitwise equality.
 Additionally, according to the authors:
@@ -307,3 +350,16 @@ Additionally, according to the authors:
     - training, package versions and source of population datasets may differ.
 - Metrics like CPC and NRMSE provide a meaningful way to judge reproduction quality.
 - For my coursework, I treat the Liverpool reproduction as successful in a statistical sense and then use the same pipeline for the unseen Fukuoka case study.
+- Comparison between Liverpool and Fukuoka-shi:
+
+| (2025 data)     | Liverpool (metropolitan district) | Fukuoka-shi                 | Ratio (2 d.p.) |
+|-----------------|-----------------------------------|-----------------------------|----------------|
+| Area (km²)      | 111.8                             | 343.39                      | 3.07           |
+| City Population | 508,961 ([mid-2024][1])           | 1,620,574 ([2025-10-31][2]) | 3.17           |
+| OD Matrix shape | (252, 252)                        | (431, 431)                  | 2.93           |
+
+- Given the above experiment and comparison, I picked te hyperparameters of `DDIM_T_sample=25` and `sample_times=50` for the final Fukuoka runs, balancing generation quality and computational cost.
+
+[1]: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland/mid2024/mye24tablesuk.xlsx
+
+[2]: https://odm.bodik.jp/tl/dataset/401307_population_touroku_population

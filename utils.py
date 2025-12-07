@@ -148,6 +148,7 @@ def nrmse(F, F_hat):
 
 def cpc(F, F_hat):
     # Common Part of Commuting
+    # CPC = \frac{2 \times \text{overlap}}{\text{true total} + \text{predicted total}}
     numerator = 2 * np.sum(np.minimum(F, F_hat))
     denominator = np.sum(F) + np.sum(F_hat)
     return numerator / denominator
