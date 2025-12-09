@@ -1,16 +1,9 @@
----
-
-## `docs/fukuoka_case_study.md`
-
-```markdown
 # Fukuoka-shi Case Study – COMP0173 Coursework 2
 
 This document describes how I adapted the GlODGen / WeDAN pipeline from the
 Liverpool setting to **Fukuoka-shi** (福岡市), and how I interpret the generated
 commuting OD patterns in the context of **SDG 11 (Sustainable Cities)**
 and **SDG 10 (Reduced Inequalities)**.
-
----
 
 ## 0. Fukuoka case context
 
@@ -213,8 +206,8 @@ Corr(pop, in_flow)  = 0.852
 
 To complement the above numerics, I plot two graphs using the same script:
 
-- ![pop vs inflows](./docs/img/fukuoka_pop_vs_in.png "pop vs inflows")
-- ![pop vs outflows](./docs/img/fukuoka_pop_vs_out.png "pop vs outflows")
+- ![pop vs inflows](img/fukuoka_pop_vs_in.png "pop vs inflows")
+- ![pop vs outflows](img/fukuoka_pop_vs_out.png "pop vs outflows")
 
 We could see a correlation of 0.895 between population and outgoing commuters. This indicates:
 
@@ -249,7 +242,7 @@ Nishijin         229  65775.0   58347.0 16545.968750     12.0      20.0
 
 Fukuoka is pretty polycentric. The above table shows major Fukuoka-shi primary CBDs, and the corresponding inflow outflow rank among the 431 regions. All of them are within the top 34% (with Hakata the worst among them).
 
-![](./docs/img/fukuoka_pop_flow_heatmaps.png)
+![](img/fukuoka_pop_flow_heatmaps.png)
 
 The above 3 plots showing population, incoming flow and outgoing flow heatmap respectively with star marked on the 5 major CBDs. We can see patterns like:
 
@@ -257,16 +250,16 @@ The above 3 plots showing population, incoming flow and outgoing flow heatmap re
 - Fukuoka is of polycentricity (multiple centres) vs a single dominant CBD;
 - peripheral cells with high outgoing flows to central zones (long-distance commuters).
 
-| ![](./docs/img/fukuoka_ego_origin_inflow_0.png) | ![](./docs/img/fukuoka_ego_origin_outflow_0.png) |
+| ![](img/fukuoka_ego_origin_inflow_0.png) | ![](img/fukuoka_ego_origin_outflow_0.png) |
 |-------------------------------------------------|--------------------------------------------------|
-| ![](./docs/img/fukuoka_ego_origin_inflow_1.png) | ![](./docs/img/fukuoka_ego_origin_outflow_1.png) |
-| ![](./docs/img/fukuoka_ego_origin_inflow_2.png) | ![](./docs/img/fukuoka_ego_origin_outflow_2.png) |
-| ![](./docs/img/fukuoka_ego_origin_inflow_3.png) | ![](./docs/img/fukuoka_ego_origin_outflow_3.png) |
-| ![](./docs/img/fukuoka_ego_origin_inflow_4.png) | ![](./docs/img/fukuoka_ego_origin_outflow_4.png) |
+| ![](img/fukuoka_ego_origin_inflow_1.png) | ![](img/fukuoka_ego_origin_outflow_1.png) |
+| ![](img/fukuoka_ego_origin_inflow_2.png) | ![](img/fukuoka_ego_origin_outflow_2.png) |
+| ![](img/fukuoka_ego_origin_inflow_3.png) | ![](img/fukuoka_ego_origin_outflow_3.png) |
+| ![](img/fukuoka_ego_origin_inflow_4.png) | ![](img/fukuoka_ego_origin_outflow_4.png) |
 
 The above plots show 5 pairs of the CBDs' OD inflow and outflow ego networks for Fukuoka-shi. I plot their top 50 strongest OD links. This gives a sense of where people coming to and from these CBDs.
 
-![](./docs/img/fukuoka_3_bands.png)
+![](img/fukuoka_3_bands.png)
 
 The figure above breaks down the generated Fukuoka OD flows into three quantile bands. 
 
@@ -308,7 +301,7 @@ However, to truly study inequality, we would need more information:
 
 Key limitations when using GlODGen and WeDAN for Fukuoka:
 
-1. Domain shift: the model trained on US areas. Japanese land-use and building patterns may not be fully represented by the same RemoteCLIP and WeDAN mapping.
+1. Domain shift: the WeDAN model trained on US areas [7]. Japanese land-use and building patterns may not be fully represented by the same RemoteCLIP and WeDAN mapping.
 2. Zoning and grid design: the 431-cell grid is my design choice and will influence OD patterns, for example, the Modifiable Areal Unit Problem.
 3. Calibration assumptions:
     - I rescale population and area of each cell to match official city figures.
@@ -339,3 +332,5 @@ This part represents the "adaptation to new context" section of COMP0173 Coursew
 [5]: https://www.city.fukuoka.lg.jp/shisei/mayor/interviews/documents/250723_konzatukanwaproject.pdf#:~:text=%E3%80%87%E9%83%BD%E5%BF%83%E9%83%A8%E3%81%AE%E9%81%93%E8%B7%AF%E4%BA%A4%E9%80%9A%E3%81%AE%E5%86%86%E6%BB%91%E5%8C%96%20%E3%83%BB%E7%A6%8F%E5%B2%A1%E5%B8%82%E9%A7%90%E8%BB%8A%E5%A0%B4%E3%83%8A%E3%83%93%E5%A4%A9%E7%A5%9E%E7%89%88%20%E3%83%BB%E5%9F%8E%E6%9D%B1%E6%A9%8B%E4%BA%A4%E5%B7%AE%E7%82%B9%E3%81%AE%E5%8F%B3%E6%8A%98%E3%83%AC%E3%83%BC%E3%83%B3%E8%A8%AD%E7%BD%AE%20%E3%83%BB%E5%A4%A9%E7%A5%9E%E9%80%9A%E7%B7%9A%E3%81%AE%E5%BB%B6%E4%BC%B8%20%E3%83%BB%E9%82%A3%E3%81%AE%E6%B4%A5%E9%80%9A%E3%82%8A%EF%BC%88%E9%82%A3%E3%81%AE%E6%B4%A5%E5%A4%A7%E6%A9%8B%EF%BC%89%EF%BC%96%E8%BB%8A%E7%B7%9A%E5%8C%96,%E3%83%BB%E5%9B%BD%E9%81%93%EF%BC%93%E5%8F%B7%E3%83%90%E3%82%A4%E3%83%91%E3%82%B9%20%E7%AB%8B%E4%BD%93%E5%8C%96%EF%BC%9C%E5%9B%BD%E4%BA%8B%E6%A5%AD%EF%BC%9E%20%E3%83%BB%E7%A6%8F%E5%B2%A1%E9%AB%98%E9%80%9F%EF%BC%93%E5%8F%B7%E7%B7%9A%EF%BC%88%E7%A9%BA%E6%B8%AF%E7%B7%9A%EF%BC%89%E5%BB%B6%E4%BC%B8%EF%BC%9C%E7%A6%8F%E5%8C%97%E5%85%AC%E7%A4%BE%E4%BA%8B%E6%A5%AD%EF%BC%9E%20%E3%83%BB%E3%83%9C%E3%83%88%E3%83%AB%E3%83%8D%E3%83%83%E3%82%AF%E4%BA%A4%E5%B7%AE%E7%82%B9%EF%BC%88%E4%B8%BB%E8%A6%81%E6%B8%8B%E6%BB%9E%E7%AE%87%E6%89%80%EF%BC%89%E3%81%AE%E6%B7%B7%E9%9B%91%E5%AF%BE%E7%AD%96%E6%A4%9C%E8%A8%8E%20%E3%81%AA%E3%81%A9
 
 [6]: https://www.city.fukuoka.lg.jp/shisei/kouhou-hodo/hodo-happyo/2024/documents/fukuokasiminamikunotametikunokoutuujuutaitaisaku.pdf#:~:text=%E7%A6%8F%E5%B2%A1%E5%9B%BD%E9%81%93%E4%BA%8B%E5%8B%99%E6%89%80%20%20%E3%80%87%E5%AE%9F%E6%96%BD%E6%A6%82%E8%A6%81%EF%BC%9A%20%E3%82%AC%E3%83%B3%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC%E5%85%A5%E5%8F%A3%E4%BA%A4%E5%B7%AE%E7%82%B9%E3%81%AB%E3%81%8A%E3%81%84%E3%81%A6%E3%80%81%E4%BA%95%E5%B0%BB%E6%96%B9%E9%9D%A2%E3%81%8B%E3%82%89%E5%A4%A9%E7%A5%9E%E3%83%BB%E5%A4%A7%E6%A9%8B%E6%96%B9%E9%9D%A2%E3%81%B8%E3%81%AE%20%E5%8F%B3%E6%8A%98%E8%BB%8A%E4%B8%A1%E3%81%AE%E6%B5%81%E5%85%A5%E3%82%92%E6%8A%91%E5%88%B6%E3%81%99%E3%82%8B%E3%81%9F%E3%82%81%E3%80%81%E4%BA%A4%E9%80%9A%E5%88%86%E6%95%A3%E3%82%92%E6%8E%A8%E5%A5%A8%E3%80%82,%E6%9D%B1%29%E5%87%BA%E5%8F%A3%E3%81%AB%E3%81%8A%E3%81%84%E3%81%A6%E3%80%81%E6%B8%8B%E6%BB%9E%E3%81%8C%E7%99%BA%E7%94%9F%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E5%87%BA%E5%8F%A3%E3%81%AE
+
+[7]: https://arxiv.org/abs/2407.15823

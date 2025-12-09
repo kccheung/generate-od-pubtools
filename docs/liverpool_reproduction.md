@@ -365,18 +365,18 @@ Additionally, according to the authors:
 
 To complement the numeric metrics, I plot three heatmaps using [s3_compare_metrics.py](../s3_compare_metrics.py):
 
-- ![Reference Liverpool OD](./docs/img/liverpool_ref_od.png "Reference Liverpool OD")
-- ![Generated Liverpool OD (scaled)](./docs/img/liverpool_hat_od.png "Generated Liverpool OD (scaled)")
-- ![Difference (generated od - reference od)](./docs/img/liverpool_diff_od.png "Difference (generated od - reference od)")
+- ![Reference Liverpool OD](img/liverpool_ref_od.png "Reference Liverpool OD")
+- ![Generated Liverpool OD (scaled)](img/liverpool_hat_od.png "Generated Liverpool OD (scaled)")
+- ![Difference (generated od - reference od)](img/liverpool_diff_od.png "Difference (generated od - reference od)")
 
 The above three figures shows that
 
 - the broad structure is similar (strong flows around the main urban core),
 - but there are noticeable local differences, which explain the RMSE and CPC values.
 
-| ![](./docs/img/liverpool_ref_od_top1000.jpg) | ![](./docs/img/liverpool_hat_od_top1000.jpg) | ![](./docs/img/liverpool_diff_od_top1000.jpg)                                                                                                                                                                                                                                                                                                     |
-|----------------------------------------------|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Top 1000 OD flows – reference Liverpool      | Top 1000 OD flows – reproduced Liverpool     | This shows how my model rearranged people compared to the repo version. The total flow matches; any difference between the two matrices reflect commuters being shifted between OD pairs. The CPC of 0.70 means that about 30% of commuting volume is assigned to different OD pairs. This figure illustrates where this 30% reallocation occurs. |
+| ![](img/liverpool_ref_od_top1000.jpg)   | ![](img/liverpool_hat_od_top1000.jpg)    | ![](img/liverpool_diff_od_top1000.jpg)                                                                                                                                                                                                                                                                                                            |
+|-----------------------------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Top 1000 OD flows – reference Liverpool | Top 1000 OD flows – reproduced Liverpool | This shows how my model rearranged people compared to the repo version. The total flow matches; any difference between the two matrices reflect commuters being shifted between OD pairs. The CPC of 0.70 means that about 30% of commuting volume is assigned to different OD pairs. This figure illustrates where this 30% reallocation occurs. |
 
 ## 5. Lessons and limitations (Liverpool)
 

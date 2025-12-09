@@ -5,9 +5,9 @@ This README documents **my own coursework work** built on top of the original
 
 The goal of this fork is:
 
-1. To **reproduce** the Liverpool commuting OD case used in the GlODGen / WeDAN papers, and
+1. To **reproduce** the Liverpool commuting OD case used in the GlODGen / WeDAN papers (please check [liverpool_reproduction.md](liverpool_reproduction.md)), and
 2. To **adapt** the pipeline to a new context: **Fukuoka-shi (Japan)**, as a case study
-   for **AI for Sustainable Development (COMP0173, UCL)**.
+   for **AI for Sustainable Development (COMP0173, UCL)**, please check [fukuoka_case_study.md](fukuoka_case_study.md).
 
 The upstream project and models are by **Rong et al.** and collaborators; all mistakes in this
 coursework adaptation are mine.
@@ -39,13 +39,8 @@ My concrete objectives:
 
     - Construct a 431-cell grid for Fukuoka-shi from government open source data: [国土数値情報ダウンロードサイト](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2025.html).
     - Calibrate population and area features using Japanese stats.
-    - Run GlODGen / WeDAN to generate a Fukuoka commuting OD matrix.
+    - Run GlODGen pipepline (which includes RemoteClip-RN50 and WeDAN model) to generate a Fukuoka commuting OD matrix.
     - Interpret the pattern in terms of SDGs (e.g. SDG 11 Sustainable Cities, SDG 10 Inequalities).
-
-3. **Critical reflection**
-
-    - Discuss **reproducibility limits** (stochastic diffusion, version drift).
-    - Analyse **contextual transfer**: what works / fails when applying a US-trained model to a Japanese city.
 
 ---
 
@@ -57,4 +52,7 @@ This README is a **high-level index**. Detailed explanations are split into thre
 docs/
   ├── README_cw2.md
   ├── liverpool_reproduction.md
-  └── fukuoka_case_study.md
+  ├── fukuoka_case_study.md
+  └── imgs/
+       ├── ... (images used in the documentation)
+```
