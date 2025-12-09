@@ -1,19 +1,22 @@
 # FUKUOKA_SHP = "./assets/fukuoka_wards_n03.shp"  # sparse 7 wards only
 # FUKUOKA_SHP = "./assets/fukuoka_wards_n03b.shp"  # finer 950 sub-wards
 # FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431.shp"  # 431-cell grid from 950 sub-wards
-FUKUOKA_SHP = "./assets/fukuoka_shi_grid_300.shp"  # 300-cell grid from dropping missing ward info on 431-cell grid
+# FUKUOKA_SHP = "./assets/fukuoka_shi_grid_300.shp"  # 300-cell grid from dropping missing ward info on 431-cell grid
+FUKUOKA_SHP = "./assets/fukuoka_shi_grid_431_v2.shp"  # 431-cell grid from 950 sub-wards with 7-wards info
 CACHE_PATH = "./assets/regional_images_fukuoka_city.pkl"
 JPN_TIF_PATH = "./assets/worldpop/jpn_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73951
 GBR_TIF_PATH = "./assets/worldpop/gbr_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=49113
 FRA_TIF_PATH = "./assets/worldpop/fra_pop_2025_CN_100m_R2025A_v1.tif"  # https://hub.worldpop.org/geodata/summary?id=73407
 
 # OD_PATH_LIVERPOOL = "./outputs/od_matrix_liverpool_2025-12-03_174537.224411.csv"
-OD_PATH_LIVERPOOL = "./outputs/od_liverpool_imageexport/od_matrix_liverpool_2025-12-02_203358.822592.csv"
+# OD_PATH_LIVERPOOL = "./outputs/od_liverpool_imageexport/od_matrix_liverpool_2025-12-02_203358.822592.csv"
+OD_PATH_LIVERPOOL = "./outputs/od_matrix_liverpool_2025-12-05_212653.015100_gpu.csv"
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_162929.892909.csv"
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-11-30_222810.287300.csv"  # sample_times=5
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-02_052952.606796.csv"  # sample_times=50
 # OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-03_150406.647073.csv"  # sample_times=50 with realistic pop and area_km2
-OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-07_191315.507735.csv"  # sample_times=50 with realistic pop and area_km2
+# OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-07_191315.507735.csv"  # sample_times=50 with realistic pop and area_km2
+OD_PATH = "./outputs/od_matrix_fukuoka_2025-12-07_202609.067238.csv"  # sample_times=50 with 431_v2 shp
 
 FUKUOKA = "Fukuoka"
 FUKUOKA_SHI = "Fukuoka_shi"

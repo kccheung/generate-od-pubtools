@@ -7,7 +7,7 @@ from shapely.geometry import box
 
 # ---- settings ----
 INPUT_SHP = "./assets/fukuoka_wards_n03b.shp"  # your 950-subward file
-OUTPUT_SHP = "./assets/fukuoka_shi_grid_431_v3.shp"  # new coarse grid
+OUTPUT_SHP = "./assets/fukuoka_shi_grid_431_v2.shp"  # new coarse grid
 TARGET_ZONES = 300  # approx number of cells
 WARD_COL = "N03_005"  # ward name/code column in the input shapefile (e.g. 東区, 博多区, etc.)
 
@@ -72,11 +72,11 @@ def main():
     print("Cells with ward:", has_ward.sum())
     print("Cells without ward:", (~has_ward).sum())
 
-    # drop cells without ward assignment
-    grid_m = grid_m[has_ward].reset_index(drop=True)
-    grid_m["zone_id"] = range(len(grid_m))  # reassign IDs
-
-    print(f"Number of grid cells created: {len(grid_m)}")
+    # 3.a drop cells without ward assignment, comment this at the moment as will use worldpop local TIF
+    # grid_m = grid_m[has_ward].reset_index(drop=True)
+    # grid_m["zone_id"] = range(len(grid_m))  # reassign IDs
+    #
+    # print(f"Number of grid cells created: {len(grid_m)}")
 
     # 4. Back to WGS84 for consistency with WorldPop / Esri code
     grid = grid_m.to_crs(epsg=4326)

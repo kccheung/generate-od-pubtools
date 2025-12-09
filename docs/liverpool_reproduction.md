@@ -25,11 +25,11 @@ I use this instead because the GlODGen's default WorldPop ArcGIS service to fetc
 
 For Liverpool I use the original shapefile provided in the GlODGen example data:
 
-- Shapefile: `./assets/example_data/shapefile/GB_Liverpool/regions.shp`
+- Shapefile: [./assets/example_data/shapefile/GB_Liverpool/regions.shp](../assets/example_data/shapefile/GB_Liverpool/regions.shp)
 - Number of regions: **252**
 - CRS: projected to WGS84 (EPSG:4326) inside the generator.
 
-To generate OD flows for Liverpool, first need to make sure the folowing is set in `s2_generate_odf.py`:
+To generate OD flows for Liverpool, first need to make sure the folowing is set in [s2_generate_odf.py](../s2_generate_odf.py):
 
 ```python
 # ...
@@ -56,8 +56,7 @@ Internally, `generator.load_area`:
 
 ### 2.1. Input features and OD generation pipeline
 
-Once the area is loaded, the Generator builds the conditioning inputs for the
-WeDAN diffusion model in `_construct_inputs()`:
+Once the area is loaded, the Generator builds the conditioning inputs for the WeDAN diffusion model in `_construct_inputs()`:
 
 #### 2.1.1 Population and area (WorldPop features)
 
@@ -108,7 +107,9 @@ def _construct_inputs(self):
     # ...
 ```
 
-The vision backbone is RemoteCLIP-RN50, it is downloaded once into `./checkpoints/models--chendelong--RemoteCLIP`, and loaded into `self.vision_model` and used to embed satellite tiles.
+The vision backbone is RemoteCLIP-RN50. It downloads once into [./checkpoints/models--chendelong--RemoteCLIP](../checkpoints/models--chendelong--RemoteCLIP). It is then loaded into `self.vision_model` to embed satellite tiles. The paper and the code use RemoteCLIP as the semantic feature extractor.
+The preprocessed ERSI satellite image of each region goes into the vision encoder of RemoteCLIP. Its output is a 1024-dimension high-level feature that captures the urban semantics of that area. The vision encoder of RemoteCLIP uses frozen pre-trained weights. According to my conversation with one
+of the authors, he suggests using RN50 (ResNet-50) as the default backbone. Choosing ResNet-50 balances computational efficiency and accuracy, as the Python package used may work with various user computational resources.
 
 #### 2.1.3 Node and edge features
 
@@ -195,7 +196,7 @@ For Liverpool in the final reproduction run I use, DDIM_T_sample = 25 (default);
 
 The original repo includes a reference OD matrix:
 
-- File: assets/example_data/CommutingOD/GB_Liverpool/generation.npy
+- File: [./assets/example_data/CommutingOD/GB_Liverpool/generation.npy](../assets/example_data/CommutingOD/GB_Liverpool/generation.npy)
 - Shape: (252, 252)
 
 I fix and record a random seed for each run, and ran a total of 10 independent runs with different seeds and compute below metrics vs the baseline.
@@ -360,24 +361,43 @@ Additionally, according to the authors:
 1. ESRI imagery (which is integrated in GlODGen) updates over time as the built environment evolves, so embeddings may also change over time, that means the embeddings used in the original paper may differ from those extracted now.
 2. Due to reviewer deadlines at the time, they did not lock the random seed when generating the sample dataset, so exact replication of sample matrices is not possible.
 
-## 4. Lessons and limitations (Liverpool)
+## 4. Visual comparisons
 
-- GlODGen / WeDAN trained on US commuting data can still generate plausible OD patterns for Liverpool when conditioned on satellite imagery and population.
-- Exact cell-by-cell reproduction of the reference matrix is not realistic:
+To complement the numeric metrics, I plot three heatmaps using [s3_compare_metrics.py](../s3_compare_metrics.py):
+
+- ![Reference Liverpool OD](./docs/img/liverpool_ref_od.png "Reference Liverpool OD")
+- ![Generated Liverpool OD (scaled)](./docs/img/liverpool_hat_od.png "Generated Liverpool OD (scaled)")
+- ![Difference (generated od - reference od)](./docs/img/liverpool_diff_od.png "Difference (generated od - reference od)")
+
+The above three figures shows that
+
+- the broad structure is similar (strong flows around the main urban core),
+- but there are noticeable local differences, which explain the RMSE and CPC values.
+
+| ![](./docs/img/liverpool_ref_od_top1000.jpg) | ![](./docs/img/liverpool_hat_od_top1000.jpg) | ![](./docs/img/liverpool_diff_od_top1000.jpg)                                                                                                                                                                                                                                                                                                     |
+|----------------------------------------------|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Top 1000 OD flows – reference Liverpool      | Top 1000 OD flows – reproduced Liverpool     | This shows how my model rearranged people compared to the repo version. The total flow matches; any difference between the two matrices reflect commuters being shifted between OD pairs. The CPC of 0.70 means that about 30% of commuting volume is assigned to different OD pairs. This figure illustrates where this 30% reallocation occurs. |
+
+## 5. Lessons and limitations (Liverpool)
+
+- The WeDAN (used in GlODGen pipeline) model trained on US commuting data can still generate plausible OD patterns for Liverpool when conditioned on satellite imagery and population.
+- Exact cell-by-cell reproduction of the reference matrix is not realistic because:
     - diffusion sampling is stochastic;
     - training, package versions and source of population datasets may differ.
 - Metrics like CPC and NRMSE provide a meaningful way to judge reproduction quality.
 - For my coursework, I treat the Liverpool reproduction as successful in a statistical sense and then use the same pipeline for the unseen Fukuoka case study.
 - Comparison between Liverpool and Fukuoka-shi:
 
-| (2025 data)     | Liverpool (metropolitan district) | Fukuoka-shi                 | Ratio (2 d.p.) |
-|-----------------|-----------------------------------|-----------------------------|----------------|
-| Area (km²)      | 111.8                             | 343.39                      | 3.07           |
-| City Population | 508,961 ([mid-2024][1])           | 1,620,574 ([2025-10-31][2]) | 3.17           |
-| OD Matrix shape | (252, 252)                        | (431, 431)                  | 2.93           |
+| (2025 data)     | Liverpool (metropolitan district) | Fukuoka-shi                 | Ratio (2 d.p.), Fukouka/Liverpool | WeDAN US dataset [3]                              |
+|-----------------|-----------------------------------|-----------------------------|-----------------------------------|---------------------------------------------------|
+| Area (km²)      | 111.8                             | 343.39                      | 3.07                              | 3,233 areas with various size, total of 9,372,610 |
+| City Population | 508,961 ([mid-2024][1])           | 1,620,574 ([2025-10-31][2]) | 3.17                              | unknown                                           |
+| OD Matrix shape | (252, 252)                        | (431, 431)                  | 2.93                              | unknown                                           |
 
-- Given the above experiment and comparison, I picked te hyperparameters of `DDIM_T_sample=25` and `sample_times=50` for the final Fukuoka runs, balancing generation quality and computational cost.
+- Given the above experiment and comparison, I picked te hyperparameters of `DDIM_T_sample=25` and `sample_times=50` for the Fukuoka context, balancing generation quality and computational cost.
 
 [1]: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland/mid2024/mye24tablesuk.xlsx
 
 [2]: https://odm.bodik.jp/tl/dataset/401307_population_touroku_population
+
+[3]: https://github.com/tsinghua-fib-lab/CommutingODGen-Dataset
