@@ -89,6 +89,18 @@ anymore)
 
 So here `worldpop[:, 0]` and `worldpop[:, 1]` are estimated population per grid cell and area per grid cell in km² respectively, derived from the CSV data.
 
+
+### 2.1.1 Ethical considerations: data collection and access. Type of data and privacy.
+All datasets I use are aggregated and anonymous:
+
+1. Fukuoka ward boundaries come from Japanese government open-data portals (Fukuoka City and MLIT [8]).
+
+2. Population rasters come from WorldPop.
+
+### 2.1.2 Licensing and terms of use
+
+All datasets are obtained via official download portals or from the authors’ public repository. I comply with their stated licences (research/non-commercial use, attribution, and share-alike where required). I do not attempt to bypass any paywalls, rate limits, or access controls, and I do not scrape websites that prohibit automated access in their terms of service. 
+
 ### 2.2 Calibration to official totals
 
 Since the polygon shape and Worldpop TIF-derived cell population and area features may not exactly sum to the official Fukuoka totals,
@@ -334,3 +346,4 @@ This part represents the "adaptation to new context" section of COMP0173 Coursew
 [6]: https://www.city.fukuoka.lg.jp/shisei/kouhou-hodo/hodo-happyo/2024/documents/fukuokasiminamikunotametikunokoutuujuutaitaisaku.pdf#:~:text=%E7%A6%8F%E5%B2%A1%E5%9B%BD%E9%81%93%E4%BA%8B%E5%8B%99%E6%89%80%20%20%E3%80%87%E5%AE%9F%E6%96%BD%E6%A6%82%E8%A6%81%EF%BC%9A%20%E3%82%AC%E3%83%B3%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC%E5%85%A5%E5%8F%A3%E4%BA%A4%E5%B7%AE%E7%82%B9%E3%81%AB%E3%81%8A%E3%81%84%E3%81%A6%E3%80%81%E4%BA%95%E5%B0%BB%E6%96%B9%E9%9D%A2%E3%81%8B%E3%82%89%E5%A4%A9%E7%A5%9E%E3%83%BB%E5%A4%A7%E6%A9%8B%E6%96%B9%E9%9D%A2%E3%81%B8%E3%81%AE%20%E5%8F%B3%E6%8A%98%E8%BB%8A%E4%B8%A1%E3%81%AE%E6%B5%81%E5%85%A5%E3%82%92%E6%8A%91%E5%88%B6%E3%81%99%E3%82%8B%E3%81%9F%E3%82%81%E3%80%81%E4%BA%A4%E9%80%9A%E5%88%86%E6%95%A3%E3%82%92%E6%8E%A8%E5%A5%A8%E3%80%82,%E6%9D%B1%29%E5%87%BA%E5%8F%A3%E3%81%AB%E3%81%8A%E3%81%84%E3%81%A6%E3%80%81%E6%B8%8B%E6%BB%9E%E3%81%8C%E7%99%BA%E7%94%9F%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E5%87%BA%E5%8F%A3%E3%81%AE
 
 [7]: https://arxiv.org/abs/2407.15823
+[8]: https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2025.html
