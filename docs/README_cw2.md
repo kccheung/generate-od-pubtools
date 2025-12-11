@@ -1,3 +1,7 @@
+Use of Generative AI
+--------
+I have read and understood UCL’s guidance on the use of Generative AI. For this assignment, I used ChatGPT-5 mini and Grok Code Fast 1 as a coding assistant to help debug errors, clarify Python and library syntax, and suggest alternative implementations. All final code, analysis, and written explanations were reviewed, tested, and edited by me, and I take full responsibility for the submitted work.
+
 # COMP0173 Coursework 2 – GlODGen for Liverpool & Fukuoka
 
 This README documents **my own coursework work** built on top of the original
@@ -56,3 +60,13 @@ docs/
   └── imgs/
        ├── ... (images used in the documentation)
 ```
+
+## 3. Environment Setup
+
+To run the code, please set up a Python environment below:
+```bash
+pip install generate-od  # this will smoothly install package dependencies
+pip uninstall -y generate-od  # but we do not need the official package, just needs the dependencies
+pip freeze  # check for installed dependencies
+```
+
